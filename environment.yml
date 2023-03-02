@@ -1,0 +1,13 @@
+name: subsegment
+channels:
+  - defaults
+  - anaconda-fusion
+  - conda-forge
+dependencies:
+  - jupyter
+  - dipy
+  - nibabel
+  - python
+  - numpy
+  - nilearn
+prefix: /opt/local/dbs/bin/miniconda3/envs/subsegment
