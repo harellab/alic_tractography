@@ -17,8 +17,11 @@ def tck2vtk(in_file):
     
     out_file = in_file.with_suffix('.vtk')
 
+    # make sure to set $APPTAINER_BIND before running. for instance:
+    # export APPTAINER_BIND=/home,${APPTAINER_BIND}
     cmd = ['apptainer', 'exec', 'docker://brainlife/mrtrix3:3.0.0',
 		'tckconvert', str(in_file), str(out_file)]
+
     if OVERWRITE:
         cmd.append('-f')
     print(cmd)
