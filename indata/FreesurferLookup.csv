@@ -412,6 +412,10 @@
 1024,ctx-lh-precentral,60,20,220,0
 1025,ctx-lh-precuneus,160,140,180,0
 1026,ctx-lh-rostralanteriorcingulate,80,20,140,0
+11026,ctx-lh-rostralanteriorcingulate_ventral,80,20,140,0
+21026,ctx-lh-rostralanteriorcingulate_dorsal,80,20,140,0
+12026,ctx-rh-rostralanteriorcingulate_ventral,80,20,140,0
+22026,ctx-rh-rostralanteriorcingulate_dorsal,80,20,140,0
 1027,ctx-lh-rostralmiddlefrontal,75,50,125,0
 1028,ctx-lh-superiorfrontal,20,220,160,0
 1029,ctx-lh-superiorparietal,20,180,140,0
