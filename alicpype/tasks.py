@@ -67,7 +67,7 @@ def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
     # register_acpc()
 
     # generate whole ALIC tractography (tractography.py)
-    generate_alic(subject, cwd)
+    generate_alic(cwd)
 
     # subsegment ALIC based on PFC ROIs (subsegment.py)
     subsegment_alic(subject, cwd)
