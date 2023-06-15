@@ -27,7 +27,7 @@ def import_hcp_subject(subject, hcp_root, cwd): #defining function
             'T1w/Diffusion/data.nii.gz',
             config.diffPath],
         'segmentation':[
-            'T1w/aparc+aseg.nii.gz',
+            'MNINonLinear/aparc+aseg.nii.gz',
             config.parcellationPath],}
             
 # Copy over each image
