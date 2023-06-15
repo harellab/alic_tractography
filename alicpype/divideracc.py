@@ -12,16 +12,10 @@ from pathlib import Path
 from subprocess import run
 from . import config
 
-def split_racc(subject, cwd):
-    subj= str(subject)
+def split_racc(cwd):
     cwd = Path(cwd)
-    base_path = os.path.abspath(cwd)  # Setting the base path to DBS_OCD_Processing directory
-    proj_path = pjoin(base_path, 'indata')  # Joining the base path with the project path
-    mni_path = pjoin(base_path, 'indata')  # Joining the base path with the MNI path
-    mni_fname = pjoin(mni_path, 'MNI152_T1_1mm_brain.nii.gz')  # Joining the MNI path with the MNI filename
     subject_path = cwd  # Joining the base path with the HCP path
     indata = pjoin(subject_path, 'indata')
-    outdata = pjoin(subject_path, 'output')
 
 
     # Step 1: generate rACC ROI nifti from aparg+aseg
