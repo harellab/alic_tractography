@@ -16,10 +16,10 @@ bvalsPath = data_dir / 'bvals'
 bvecsPath = data_dir / 'bvecs'
 #ParcellationFsPath = data_dir / 'mri/aparc+aseg.mgz'
 rACC_mod_aparc_aseg = data_dir / 'rACC_mod_aparc_aseg.nii.gz'
-rACC_split_labels = {11026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_1.nii.gz',
-                     21026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_2.nii.gz',
-                    12026: data_dir / 'rh_rostralanteriorcingulate_ROI_acpc_1.nii.gz',
-                     22026: data_dir / 'rh_rostralanteriorcingulate_ROI_acpc_2.nii.gz'}
+rACC_split_labels = {11026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_ventral.nii.gz',
+                     21026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_dorsal.nii.gz',
+                    12026: data_dir / 'rh_rostralanteriorcingulate_ROI_acpc_ventral.nii.gz',
+                     22026: data_dir / 'rh_rostralanteriorcingulate_ROI_acpc_dorsal.nii.gz'}
 
 
 # Freesurfer lookup table, e.g. https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT

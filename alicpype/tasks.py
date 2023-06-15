@@ -69,6 +69,9 @@ def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
     # generate whole ALIC tractography (tractography.py)
     generate_alic(cwd)
 
+    # generate split rACC ROI (divideracc.py)
+    split_racc(subject, cwd)
+
     # subsegment ALIC based on PFC ROIs (subsegment.py)
     subsegment_alic(subject, cwd)
 
