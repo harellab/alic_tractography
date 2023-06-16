@@ -7,6 +7,7 @@ from pathlib import Path
 data_dir = Path('indata')
 
 parcellationPath = data_dir / 'aparc+aseg.nii.gz'
+parcellationFsPath = data_dir / 'mri/aparc+aseg.nii.gz'
 refT1Path = data_dir / 'T1w_acpc.nii.gz'
 diffPath = data_dir / 'diffusion_acpc.nii.gz'
 #diff_b0acpc_path = data_dir / 'eddy_wrapped_B0_image_space-acpc.nii.gz'
@@ -26,4 +27,4 @@ rACC_split_labels = {11026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_ven
 lutPath = data_dir / 'FreesurferLookup.csv'
 
 #tckPath=Path('/home/naxos2-raid25/sreta001/DBS_for_sreta001/DBS-OCD/OCD004/Code/app-track_aLIC_harelpreproc/output/track.tck')
-saveFigDir = startDir / 'output'
+saveFigDir = Path( 'output' )
