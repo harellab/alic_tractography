@@ -6,10 +6,11 @@ from pathlib import Path
 # importing function from each script/submodules (ex. centroids.py)
 from .externalio import import_hcp_subject
 from .tractography import generate_alic
-from .subsegment import subsegment_alic
-from .heatmap import generate_heatmap
-from .centroids import generate_centroid
-from .slicer import generate_slicer
+from .splitracc import split_racc
+# from .subsegment import subsegment_alic
+# from .heatmap import generate_heatmap
+# from .centroids import generate_centroid
+# from .slicer import generate_slicer
 
 def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
     
@@ -60,7 +61,7 @@ def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
     alicpype_root = Path(alicpype_root) #convert datatype to path
     subject = str(subject)
     cwd = alicpype_root / subject / 'OCD_pipeline'
-    import_hcp_subject(subject,hcp_root,alicpype_root)
+    import_hcp_subject(subject,hcp_root,cwd)
 
     # register images into acpc space (registration.py)
     # data already registered
@@ -69,17 +70,17 @@ def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
     # generate whole ALIC tractography (tractography.py)
     generate_alic(cwd)
 
-    # generate split rACC ROI (divideracc.py)
+    # # generate split rACC ROI (divideracc.py)
     split_racc(cwd)
 
-    # subsegment ALIC based on PFC ROIs (subsegment.py)
-    subsegment_alic(cwd)
+    # # subsegment ALIC based on PFC ROIs (subsegment.py)
+    # subsegment_alic(cwd)
 
-    # generate subsegmented heatmaps (heatmap.py)
-    #generate_heatmap(subject, cwd)
+    # # generate subsegmented heatmaps (heatmap.py)
+    # #generate_heatmap(subject, cwd)
 
-    # calculate centroids of each subsegmented ALIC heatmap (centoids.py)
-    generate_centroid(subject, cwd)
+    # # calculate centroids of each subsegmented ALIC heatmap (centoids.py)
+    # generate_centroid(subject, cwd)
 
-    # generate a slicer scene containing heatmaps and centroids (slicer.py)
-    generate_slicer(subject, cwd)
+    # # generate a slicer scene containing heatmaps and centroids (slicer.py)
+    # generate_slicer(subject, cwd)
