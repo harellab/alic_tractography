@@ -13,23 +13,27 @@ from subprocess import run
 from . import config
 
 def split_racc(cwd):
+    print('running split_racc')
     cwd = Path(cwd)
     subject_path = cwd  # Joining the base path with the HCP path
-    indata = pjoin(subject_path, 'indata')
+    indata = subject_path / 'indata'
+    divider_mni_fname = indata / 'subcallosal_cingulate_mni.nii.gz'
+    
 
 
     # Step 1: generate rACC ROI nifti from aparg+aseg
+    print('Generate rACC ROI nifti from aparg+aseg..')
     cmd = ['fslmaths', 
         str(cwd / config.parcellationPath), 
         '-thr', str(1026), 
         '-uthr', str(1026), 
-        str(cwd / 'output' / 'lh_rostralanteriorcingulate_ROI.nii.gz')]
+        str(indata / 'lh_rostralanteriorcingulate_ROI_acpc.nii.gz')]
     run(cmd)
     cmd = ['fslmaths', 
         str(cwd / config.parcellationPath), 
         '-thr', str(2026), 
         '-uthr', str(2026), 
-        str(cwd / 'output' / 'rh_rostralanteriorcingulate_ROI.nii.gz')]
+        str(indata / 'rh_rostralanteriorcingulate_ROI_acpc.nii.gz')]
     run(cmd)
 
     # Step 2: Create binary divider mask in MNI space 
@@ -43,38 +47,36 @@ def split_racc(cwd):
     #mask_img=nib.Nifti1Image(mask_arr, affine=mni_affine, header=mni_header)
     #nib.save(mask_img, divider_mni_fname)
 
-    # Step 3: invert acpc2MNI linear transform (xfm = transform)
-    import nipype.interfaces.fsl as fsl
-    invt = fsl.ConvertXFM()
-    invt.inputs.in_file = pjoin(indata,'acpc2MNILinear.mat') # TO DO
-    invt.inputs.invert_xfm = True
-    MNI2acpcLinear_xfm = pjoin(indata,'MNI2acpcLinear.mat') # TO DO
-    invt.inputs.out_file = MNI2acpcLinear_xfm #output located in indata folder
-    invt.cmdline 
-    invt.run()
+    # # Step 3: invert acpc2MNI linear transform (xfm = transform)
+    # import nipype.interfaces.fsl as fsl
+    # invt = fsl.ConvertXFM()
+    # invt.inputs.in_file = pjoin(indata,'acpc2MNILinear.mat') # TO DO
+    # invt.inputs.invert_xfm = True
+    # MNI2acpcLinear_xfm = pjoin(indata,'MNI2acpcLinear.mat') # TO DO
+    # invt.inputs.out_file = MNI2acpcLinear_xfm #output located in indata folder
+    # invt.cmdline 
+    # invt.run()
 
     # Step 3: Register SCC mask from MNI space to acpc space
     #diff_path_acpc=pjoin(subject_path, 'OCD_pipeline_noSubcorticalGray/indata/')
     #diff_mask_path=pjoin(diff_path, "masks")
     #if not os.path.exists(diff_mask_path):
         #os.makedir(diff_mask_path
-
+    print('Register SCC mask from MNI space to acpc space...')
     import nipype.interfaces.fsl as fsl
-    applyxfm = fsl.preprocess.ApplyXFM()
+    applyxfm = fsl.preprocess.ApplyWarp()
     applyxfm.inputs.in_file = divider_mni_fname #subcallosal_cing_mask as input
-    applyxfm.inputs.in_matrix_file = MNI2acpcLinear_xfm
+    applyxfm.inputs.field_file = config.mni_to_acpc_xfm
     subcallosal_cingulate_acpc = pjoin(indata, 'subcallosal_cingulate_acpc.nii.gz')
     applyxfm.inputs.out_file = subcallosal_cingulate_acpc
-    applyxfm.inputs.reference = pjoin(cwd, config.refT1Path)
-    applyxfm.inputs.apply_xfm = True
-    applyxfm.inputs.interp = "nearestneighbour" #binarize subcallosal mask
+    applyxfm.inputs.ref_file = pjoin(cwd, config.parcellationPath)
+    #applyxfm.inputs.apply_xfm = True
+    applyxfm.inputs.interp = 'nn' # "nearestneighbour" #binarize subcallosal mask
     result = applyxfm.run() 
 
     # Step 4: Use the divided subcallosal mask to cut the rostral anterior cingulate ROI mask 
     # function to get the range of non-zero data of a 3d array 
-    def shrinkarr(
-    arr, # array as input data      
-    ):
+    def shrinkarr(arr):# array as input data     
         import numpy as np
         ax, ay, az=arr.shape
 
@@ -133,7 +135,6 @@ def split_racc(cwd):
             d0, d1=div_x_r
             r0, r1=roi_x_r
         d_point=int(sc.round((d0+d1)/2))
-        #print(d0, d1, d_point, r0, r1)
         if (d_point<=r1) & (d_point>=r0):
             if cut_axis=="z":
                 out_arr1[:, :, :d_point]=roi_data[:, :, :d_point]
@@ -146,23 +147,26 @@ def split_racc(cwd):
                 out_arr2[d_point:, :, :]=roi_data[d_point:, :, :]        
             out_img1=nib.Nifti1Image(out_arr1, affine=roi_affine, header=roi_header)
             #img1 = ventral rostral ACC
-            nib.save(out_img1, pjoin(out_path, out_fname+"_1.nii.gz"))
+            nib.save(out_img1, pjoin(out_path, out_fname+"_ventral.nii.gz"))
             #img2 = dorsal rostral ACC
             out_img2=nib.Nifti1Image(out_arr2, affine=roi_affine, header=roi_header)
-            nib.save(out_img2, pjoin(out_path, out_fname+"_2.nii.gz"))
+            nib.save(out_img2, pjoin(out_path, out_fname+"_dorsal.nii.gz"))
         else:
             raise ValueError("mid point of divider out of range of roi")
         
     #in_fname=pjoin(indata, "")
-    in_rois = [pjoin(indata,"rh_rostralanteriorcingulate_ROI_acpc.nii.gz"), pjoin(indata,"lh_rostralanteriorcingulate_ROI_acpc.nii.gz")]
-    in_roi_fname = in_rois
+    in_rois = [pjoin(indata,"rh_rostralanteriorcingulate_ROI_acpc.nii.gz"), 
+        pjoin(indata,"lh_rostralanteriorcingulate_ROI_acpc.nii.gz")]
+    #TODO move rACC pathnames to config.py
+    # in_roi_fname = in_rois
     in_divider_fname = subcallosal_cingulate_acpc
     #in_divider_fname = subcallosal_cingulate_acpc
-    #out_path=[pjoin(outdata,""
-    out_rois = rois = [pjoin(indata,"rh_rostralanteriorcingulate_ROI_acpc"), pjoin(indata,"lh_rostralanteriorcingulate_ROI_acpc")]
-    out_fname = out_rois
-    cut_roi("", in_roi_fname[0], "", in_divider_fname, "", out_fname[0])
-    cut_roi("", in_roi_fname[1], "", in_divider_fname, "", out_fname[1])
+    out_rois = [pjoin(indata,"rh_rostralanteriorcingulate_ROI_acpc"), 
+        pjoin(indata,"lh_rostralanteriorcingulate_ROI_acpc")]
+    #TODO move rACC pathnames to config.py
+    #out_fname = out_rois
+    cut_roi("", in_rois[0], "", in_divider_fname, "", out_rois[0])
+    cut_roi("", in_rois[1], "", in_divider_fname, "", out_rois[1])
 
     # MODIFY APARC+ASEG WITH DIVIDED rACC ROI
 

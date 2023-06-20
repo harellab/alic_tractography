@@ -22,6 +22,10 @@ rACC_split_labels = {11026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_ven
                     12026: data_dir / 'rh_rostralanteriorcingulate_ROI_acpc_ventral.nii.gz',
                      22026: data_dir / 'rh_rostralanteriorcingulate_ROI_acpc_dorsal.nii.gz'}
 
+# transform files
+acpc_to_mni_xfm = 'MNINonLinear/xfms/acpc_dc2standard.nii.gz'
+mni_to_acpc_xfm = 'MNINonLinear/xfms/standard2acpc_dc.nii.gz'
+
 
 # Freesurfer lookup table, e.g. https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT
 lutPath = data_dir / 'FreesurferLookup.csv'

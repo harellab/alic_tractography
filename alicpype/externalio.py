@@ -36,9 +36,10 @@ def import_hcp_subject(subject, hcp_root, cwd): #defining function
             # app-track_aLIC is hard coded to use this path 
             # so we must duplicate the segmentation here.
             'T1w/aparc+aseg.nii.gz',
-            config.parcellationFsPath]}
-
-    
+            config.parcellationFsPath],
+        'mni_to_acpc_xfm':[
+            'MNINonLinear/xfms/standard2acpc_dc.nii.gz',
+            config.mni_to_acpc_xfm]}   
             
 # Copy over each image
     for source_file, dest_file in to_copy.values():
