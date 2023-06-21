@@ -40,8 +40,8 @@ track_files = {
         'right': [ Path('app-track_aLIC/output/combined_aLIC_right.tck'),]}
 
 # transform files
-acpc_to_mni_xfm = 'MNINonLinear/xfms/acpc_dc2standard.nii.gz'
-mni_to_acpc_xfm = 'MNINonLinear/xfms/standard2acpc_dc.nii.gz'
+acpc_to_mni_xfm = data_dir / 'acpc_dc2standard.nii.gz'
+mni_to_acpc_xfm = data_dir / 'standard2acpc_dc.nii.gz'
 
 
 # Freesurfer lookup table, e.g. https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT
