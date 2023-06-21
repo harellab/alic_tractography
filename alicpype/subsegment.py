@@ -14,10 +14,6 @@ from . import config
 from subprocess import run
 #import random
 
-#make sure that wma_pyTools is right in the working directory, or that
-#the package can otherwise be imported effectively
-#sys.path.append('wma_pyTools')
-startDir=Path(os.getcwd())
 import pandas as pd
 import wmaPyTools.roiTools
 import wmaPyTools.analysisTools
@@ -28,11 +24,12 @@ import wmaPyTools.visTools
 #dipy
 from dipy.tracking.utils import reduce_labels
 from dipy.tracking import utils
-import dipy.io.streamline
 from dipy.tracking.utils import density_map
 
+from .config import targetLabels
+
 # Define function to convert tck to vtk
-def tck2vtk(in_file):
+def tck2vtk(in_file, overwrite=True):
     in_file = Path(in_file)
     assert(in_file.is_file())
     assert(in_file.suffix.lower() == '.tck')
@@ -44,7 +41,7 @@ def tck2vtk(in_file):
     cmd = ['apptainer', 'exec', 'docker://brainlife/mrtrix3:3.0.0',
 		'tckconvert', str(in_file), str(out_file)]
 
-    if OVERWRITE:
+    if overwrite:
         cmd.append('-f')
     print(cmd)
     run(cmd, check = True)
@@ -52,26 +49,18 @@ def tck2vtk(in_file):
 # SUBSEGMENT TRACKS
 def subsegment_alic(cwd):
     cwd = Path(cwd)
-    # define target and spine labels
-    targetLabels={'left':[1002,11026,21026,1012,1020,1028,1003,1014,1019,1027],
-                'right':[2002,12026,22026,2012,2020,2028,2003,2014,2019,2027]}
-    spineLabels = {'left': [28, 16, 10], 
-                'right': [16, 60, 49]}
 
     #paths to input data
-    track_files = {
-        'left': [startDir / 'app-track_aLIC' / 'output' / 'combined_aLIC_left.tck',],
-        'right': [startDir / 'app-track_aLIC' / 'output' / 'combined_aLIC_right.tck',]}
-
+    track_files = {k: cwd / v for k, v in config.track_files.items()}
+    
     # sanity check inputs
     to_check = [ config.parcellationPath, config.refT1Path, config.lutPath]
     for side in ['left', 'right']:
         for tck in track_files[side]:
-            to_check.append(tck)
-            
+            to_check.append(tck)     
     for i in to_check:
         print(i)
-        assert(cwd / i.is_file())
+        assert((cwd / i).is_file())
 
     # define functions to generate tck for target
 
@@ -133,9 +122,6 @@ def subsegment_alic(cwd):
 
     # load atlas-based segmentation - modified rACC mask (Dan calls it a parcellation)
     parcellaton=nib.load( cwd / config.rACC_mod_aparc_aseg)
-
-    # load T1 anatomical image
-    refT1=nib.load( cwd / config.refT1Path)
 
     # load Freesurfer labels
     lookupTable=pd.read_csv(cwd / config.lutPath,index_col='#No.')

@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 # description: storing constants and configurations
 
+import sys
 from pathlib import Path
+
+ALICPYPE_DIR = Path(__file__).resolve().parent
+OCD_PIPELINE_DIR = ALICPYPE_DIR.parent
+
+# setup wma_pyTools submodule installation
+# make sure that wma_pyTools is right in the working directory, or that
+# the package can otherwise be imported effectively
+# TODO fix wma_pyTools installation
+sys.path.append(str(OCD_PIPELINE_DIR / 'wma_pyTools'))
 
 # define expected inputs and check for them
 data_dir = Path('indata')
@@ -21,6 +31,13 @@ rACC_split_labels = {11026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_ven
                      21026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_dorsal.nii.gz',
                     12026: data_dir / 'rh_rostralanteriorcingulate_ROI_acpc_ventral.nii.gz',
                      22026: data_dir / 'rh_rostralanteriorcingulate_ROI_acpc_dorsal.nii.gz'}
+# Targets of interest (Freesurfer label index)
+targetLabels={'left':[1002,11026,21026,1012,1020,1028,1003,1014,1019,1027],
+                'right':[2002,12026,22026,2012,2020,2028,2003,2014,2019,2027]}
+
+track_files = {
+        'left': [ Path('app-track_aLIC/output/combined_aLIC_left.tck'),],
+        'right': [ Path('app-track_aLIC/output/combined_aLIC_right.tck'),]}
 
 # transform files
 acpc_to_mni_xfm = 'MNINonLinear/xfms/acpc_dc2standard.nii.gz'
