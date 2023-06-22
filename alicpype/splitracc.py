@@ -36,16 +36,16 @@ def split_racc(cwd):
         str(indata / 'rh_rostralanteriorcingulate_ROI_acpc.nii.gz')]
     run(cmd)
 
-    # Step 2: Create binary divider mask in MNI space 
-    #divider_mni_fname=pjoin(proj_path, 'subcallosal_cingulate_mni.nii.gz')
-    mni = nib.load(mni_fname)
-    mni_header=mni.header 
-    mni_affine=mni.affine
-    mni_data=mni.get_fdata()
-    mask_arr=np.zeros(mni_data.shape)
-    mask_arr[:, :, 76]=1 #extract a single line of voxels at z=76 (axial slice)
-    mask_img=nib.Nifti1Image(mask_arr, affine=mni_affine, header=mni_header)
-    nib.save(mask_img, divider_mni_fname)
+    # # Step 2: Create binary divider mask in MNI space 
+    # #divider_mni_fname=pjoin(proj_path, 'subcallosal_cingulate_mni.nii.gz')
+    # mni = nib.load(mni_fname)
+    # mni_header=mni.header 
+    # mni_affine=mni.affine
+    # mni_data=mni.get_fdata()
+    # mask_arr=np.zeros(mni_data.shape)
+    # mask_arr[:, :, 76]=1 #extract a single line of voxels at z=76 (axial slice)
+    # mask_img=nib.Nifti1Image(mask_arr, affine=mni_affine, header=mni_header)
+    # nib.save(mask_img, divider_mni_fname)
 
     # Step 3: Register SCC mask from MNI space to acpc space
     print('Register SCC mask from MNI space to acpc space...')
