@@ -7,9 +7,9 @@ from pathlib import Path
 from .externalio import import_hcp_subject
 from .tractography import generate_alic
 from .splitracc import split_racc
-# from .subsegment import subsegment_alic
+from .subsegment import subsegment_alic
 # from .heatmap import generate_heatmap
-# from .centroids import generate_centroid
+from .centroids import generate_centroid
 # from .slicer import generate_slicer
 
 def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
@@ -74,13 +74,13 @@ def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
     split_racc(cwd)
 
     # # subsegment ALIC based on PFC ROIs (subsegment.py)
-    # subsegment_alic(cwd)
+    subsegment_alic(cwd)
 
     # # generate subsegmented heatmaps (heatmap.py)
     # #generate_heatmap(subject, cwd)
 
     # # calculate centroids of each subsegmented ALIC heatmap (centoids.py)
-    # generate_centroid(subject, cwd)
+    generate_centroid(cwd)
 
     # # generate a slicer scene containing heatmaps and centroids (slicer.py)
     # generate_slicer(subject, cwd)
