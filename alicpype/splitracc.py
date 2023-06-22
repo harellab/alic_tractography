@@ -37,31 +37,17 @@ def split_racc(cwd):
     run(cmd)
 
     # Step 2: Create binary divider mask in MNI space 
-    ##divider_mni_fname=pjoin(proj_path, 'subcallosal_cingulate_mni.nii.gz')
-    #mni = nib.load(mni_fname)
-    #mni_header=mni.header 
-    #mni_affine=mni.affine
-    #mni_data=mni.get_fdata()
-    #mask_arr=np.zeros(mni_data.shape)
-    #mask_arr[:, :, 76]=1 #extract a single line of voxels at z=76 (axial slice)
-    #mask_img=nib.Nifti1Image(mask_arr, affine=mni_affine, header=mni_header)
-    #nib.save(mask_img, divider_mni_fname)
-
-    # # Step 3: invert acpc2MNI linear transform (xfm = transform)
-    # import nipype.interfaces.fsl as fsl
-    # invt = fsl.ConvertXFM()
-    # invt.inputs.in_file = pjoin(indata,'acpc2MNILinear.mat') # TO DO
-    # invt.inputs.invert_xfm = True
-    # MNI2acpcLinear_xfm = pjoin(indata,'MNI2acpcLinear.mat') # TO DO
-    # invt.inputs.out_file = MNI2acpcLinear_xfm #output located in indata folder
-    # invt.cmdline 
-    # invt.run()
+    #divider_mni_fname=pjoin(proj_path, 'subcallosal_cingulate_mni.nii.gz')
+    mni = nib.load(mni_fname)
+    mni_header=mni.header 
+    mni_affine=mni.affine
+    mni_data=mni.get_fdata()
+    mask_arr=np.zeros(mni_data.shape)
+    mask_arr[:, :, 76]=1 #extract a single line of voxels at z=76 (axial slice)
+    mask_img=nib.Nifti1Image(mask_arr, affine=mni_affine, header=mni_header)
+    nib.save(mask_img, divider_mni_fname)
 
     # Step 3: Register SCC mask from MNI space to acpc space
-    #diff_path_acpc=pjoin(subject_path, 'OCD_pipeline_noSubcorticalGray/indata/')
-    #diff_mask_path=pjoin(diff_path, "masks")
-    #if not os.path.exists(diff_mask_path):
-        #os.makedir(diff_mask_path
     print('Register SCC mask from MNI space to acpc space...')
     import nipype.interfaces.fsl as fsl
     applyxfm = fsl.preprocess.ApplyWarp()
