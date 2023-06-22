@@ -84,7 +84,7 @@ def generate_centroid(cwd):
                     'visible': np.ones(n_points, dtype=np.int),
                     'locked': np.zeros(n_points, dtype=np.int),
                     'description':['' for i in range(n_points)]}
-                table = pd.DataFrame(table_data,index=table_data['label'],
-                columns=column_labels)
-                table.to_csv(out_file.with_suffix('.csv'))
+                table = pd.DataFrame(table_data, columns=column_labels)
+                table.set_index('label')
+                table.to_csv(out_file.with_suffix('.csv'), index=False)
 
