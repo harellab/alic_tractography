@@ -51,8 +51,9 @@ def subsegment_alic(cwd):
     cwd = Path(cwd)
 
     #paths to input data
-    track_files = {k: cwd / v for k, v in config.track_files.items()}
-    
+    track_files = {k: [cwd / i for i in v]
+        for k, v in config.track_files.items()}
+        
     # sanity check inputs
     to_check = [ config.parcellationPath, config.refT1Path, config.lutPath]
     for side in ['left', 'right']:

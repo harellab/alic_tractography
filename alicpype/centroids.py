@@ -23,6 +23,7 @@ import wmaPyTools.visTools
 from dipy.tracking.utils import reduce_labels
 from dipy.tracking import utils
 import dipy.io.streamline
+import dipy.align
 from dipy.tracking.utils import density_map
 
 #alicpype imports
@@ -36,7 +37,8 @@ def generate_centroid(cwd):
     #TODO, not a dir, change to "file"
 
     #paths to input data
-    track_files = {k: cwd / v for k, v in config.track_files.items()}
+    track_files = {k: [cwd / i for i in v]
+        for k, v in config.track_files.items()}
     # load Freesurfer labels
     lookupTable=pd.read_csv(cwd / config.lutPath,index_col='#No.')
     saveFigDir = cwd / config.saveFigDir
@@ -82,7 +84,7 @@ def generate_centroid(cwd):
                     'visible': np.ones(n_points, dtype=np.int),
                     'locked': np.zeros(n_points, dtype=np.int),
                     'description':['' for i in range(n_points)]}
-                table = pd.DataFrame(table_data,index=table_data['label',],
+                table = pd.DataFrame(table_data,index=table_data['label'],
                 columns=column_labels)
                 table.to_csv(out_file.with_suffix('.csv'))
 
