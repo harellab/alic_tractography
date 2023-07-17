@@ -39,7 +39,10 @@ def import_hcp_subject(subject, hcp_root, cwd): #defining function
             config.parcellationFsPath],
         'mni_to_acpc_xfm':[
             'MNINonLinear/xfms/standard2acpc_dc.nii.gz',
-            config.mni_to_acpc_xfm]}   
+            config.mni_to_acpc_xfm], 
+        'acpc_to_mni_xfm':['MNINonLinear/xfms/acpc_dc2standard.nii.gz',
+            config.acpc_to_mni_xfm]}
+
             
 # Copy over each image
     for source_file, dest_file in to_copy.values():

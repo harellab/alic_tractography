@@ -3,6 +3,7 @@
 
 import sys
 from pathlib import Path
+import os
 
 ALICPYPE_DIR = Path(__file__).resolve().parent
 OCD_PIPELINE_DIR = ALICPYPE_DIR.parent
@@ -12,6 +13,9 @@ OCD_PIPELINE_DIR = ALICPYPE_DIR.parent
 # the package can otherwise be imported effectively
 # TODO fix wma_pyTools installation
 sys.path.append(str(OCD_PIPELINE_DIR / 'wma_pyTools'))
+
+# setup connectome workbench installation 
+os.environ['PATH'] = '/opt/local/dbs/bin/hcp-workbench-1.4.2/workbench/bin_rh_linux64:'+ os.environ['PATH']
 
 # define expected inputs and check for them
 data_dir = Path('indata')
@@ -49,3 +53,6 @@ lutPath = data_dir / 'FreesurferLookup.csv'
 
 #tckPath=Path('/home/naxos2-raid25/sreta001/DBS_for_sreta001/DBS-OCD/OCD004/Code/app-track_aLIC_harelpreproc/output/track.tck')
 saveFigDir = Path( 'output' )
+
+#acpc_to_MNI_xfm in ANTs format
+acpc_to_mni_xfm_itk = data_dir / 'acpc_to_mni_xfm_itk.nii.gz'

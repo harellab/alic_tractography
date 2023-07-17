@@ -30,6 +30,19 @@ from dipy.tracking.utils import density_map
 from . import config
 from .config import targetLabels
 
+#Transform centroid coordinates from ACPC to MNI space
+def transform_centerofmass_to_mni(acpc_centerofmass, acpc_to_mni_xfm, acpc_to_mni_xfm_itk,centerofmass_mni):
+    #TODO setup connectome workbench
+    cmd = ['wb_command', '-convert-warpfield', '-from-fnirt', str(acpc_to_mni_xfm), str(config.parcellationPath), 
+        '-to-itk', str(acpc_to_mni_xfm_itk)] #Convert transform from fsl to ANTs format (itk)
+    run(cmd)
+    #Apply converted acpc to mni xfm to centerofmass
+    #create csv containing centerofmass outputs
+    #np.savetxt(out_file.with_suffix('.csv'), acpc_centerofmass, delimiter=",") 
+    
+    #cmd = [antsApplyTransformsToPoints 
+
+
 def generate_centroid(cwd):
     cwd = Path(cwd)
     ALIC_mask_dir = {'left': config.OCD_PIPELINE_DIR / 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_left.nii.gz',
@@ -57,6 +70,7 @@ def generate_centroid(cwd):
                 in_img = in_img*resample_ALIC_mask.get_fdata() #multiply ALIC density map voxel array by resampled ALIC mask array
                 num_slices = np.shape(in_img)[APaxis]
                 out_file = saveFigDir / ('%s_%04d_%s_centerofmass_withinALIC' % (track_file.stem, iTarget, targetStr)) #output center of mass image
+                mni_out_file = saveFigDir / ('%s_%04d_%s_centerofmass_withinALIC_mni' % (track_file.stem, iTarget, targetStr)) #output centroids in mni space
                 centerofmass = np.zeros([num_slices,3]) #numerical array corresponding to x,y,z coordinates of centroid
                 for iSlice in range(num_slices): #interating over total number of coronal slides of input image
                     img_slice = in_img[:,iSlice,:] #an individual slice
@@ -64,8 +78,8 @@ def generate_centroid(cwd):
                     centerofmass[iSlice,:] = [tmp[0],iSlice,tmp[1]] #adding iSlice at APaxis=1
                 centerofmass = centerofmass[~np.any(np.isnan(centerofmass),axis=1)]
                 nib.affines.apply_affine(in_nifti.affine, centerofmass, inplace=True)
-
-                np.savetxt(out_file.with_suffix('.csv'), centerofmass, delimiter=",") #save output file as a .csv for all slices
+#TODO define new function
+                #np.savetxt(out_file.with_suffix('.csv'), centerofmass, delimiter=",") #save output file as a .csv for all slices
                 # make a Pandas dataframe of the location data and save it
                 n_points = np.shape(centerofmass)[0]
                 # point_labels = [f'{targetStr}_{i}' for i in range(n_points)]
@@ -87,4 +101,6 @@ def generate_centroid(cwd):
                 table = pd.DataFrame(table_data, columns=column_labels)
                 table.set_index('label')
                 table.to_csv(out_file.with_suffix('.csv'), index=False)
-
+                centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
+                    cwd/config.acpc_to_mni_xfm, cwd/config.acpc_to_mni_xfm_itk,'TODO')
+   
