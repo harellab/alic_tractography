@@ -93,14 +93,16 @@ def generate_centroid(cwd):
                     'r': centerofmass[:,0],
                     'a': centerofmass[:,1],
                     's': centerofmass[:,2],
-                    'defined': np.ones(n_points, dtype=np.int),
-                    'selected': np.zeros(n_points, dtype=np.int),
-                    'visible': np.ones(n_points, dtype=np.int),
-                    'locked': np.zeros(n_points, dtype=np.int),
+                    'defined': np.ones(n_points, dtype=int),
+                    'selected': np.zeros(n_points, dtype=int),
+                    'visible': np.ones(n_points, dtype=int),
+                    'locked': np.zeros(n_points, dtype=int),
                     'description':['' for i in range(n_points)]}
                 table = pd.DataFrame(table_data, columns=column_labels)
                 table.set_index('label')
                 table.to_csv(out_file.with_suffix('.csv'), index=False)
+                print(mni_out_file)
                 centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
-                    cwd/config.acpc_to_mni_xfm, cwd/config.acpc_to_mni_xfm_itk,'TODO')
+                    cwd/config.acpc_to_mni_xfm, cwd/config.acpc_to_mni_xfm_itk,
+                        mni_out_file.with_suffix('.csv'))
    

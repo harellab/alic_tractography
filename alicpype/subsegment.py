@@ -87,8 +87,9 @@ def subsegment_alic(cwd):
         targetBool = get_streams_matching_target(streams, atlas, target)
         streams = streams[targetBool]
         
-        #dipy quickbundles
-        streams = streams[bundle(streams)]
+        #dipy quickbundles, will only run if > 0 streamlines present
+        if len(streams) > 0:
+            streams = streams[bundle(streams)]
         
         #save *.tck tractogram
         wmaPyTools.streamlineTools.stubbornSaveTractogram(streams,
