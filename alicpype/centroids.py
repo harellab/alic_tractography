@@ -18,6 +18,7 @@ import wmaPyTools.analysisTools
 import wmaPyTools.segmentationTools
 import wmaPyTools.streamlineTools
 import wmaPyTools.visTools
+from tempfile import NamedTemporaryFile
 
 #dipy
 from dipy.tracking.utils import reduce_labels
@@ -32,15 +33,22 @@ from .config import targetLabels
 
 #Transform centroid coordinates from ACPC to MNI space
 def transform_centerofmass_to_mni(acpc_centerofmass, acpc_to_mni_xfm, acpc_to_mni_xfm_itk,centerofmass_mni):
-    #TODO setup connectome workbench
     cmd = ['wb_command', '-convert-warpfield', '-from-fnirt', str(acpc_to_mni_xfm), str(config.parcellationPath), 
         '-to-itk', str(acpc_to_mni_xfm_itk)] #Convert transform from fsl to ANTs format (itk)
-    run(cmd)
+    run(cmd, check=True)
     #Apply converted acpc to mni xfm to centerofmass
     #create csv containing centerofmass outputs
-    #np.savetxt(out_file.with_suffix('.csv'), acpc_centerofmass, delimiter=",") 
-    
-    #cmd = [antsApplyTransformsToPoints 
+    with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp:
+        np.savetxt(centerofmasstemp.name, acpc_centerofmass, delimiter=",") 
+        cmd = ['antsApplyTransformsToPoints', 
+            '-d', '3',
+             '-i', centerofmasstemp.name, 
+             '-o', str(centerofmass_mni),
+             '-t', f'[{str(acpc_to_mni_xfm_itk)},0]']
+        print(cmd)
+        run(cmd, check=True)
+    #convert centerofmass_mni into 3D slicer compatible csv
+
 
 
 def generate_centroid(cwd):
