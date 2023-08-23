@@ -30,6 +30,7 @@ bvalsPath = data_dir / 'bvals'
 #bvalsPath_b9 = data_dir / 'bvals_b9'
 bvecsPath = data_dir / 'bvecs'
 #ParcellationFsPath = data_dir / 'mri/aparc+aseg.mgz'
+MNI_ref_image = OCD_PIPELINE_DIR / 'indata' / 'MNI152_T1_1mm_brain.nii.gz'
 rACC_mod_aparc_aseg = data_dir / 'rACC_mod_aparc_aseg.nii.gz'
 rACC_split_labels = {11026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_ventral.nii.gz',
                      21026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_dorsal.nii.gz',

@@ -31,11 +31,28 @@ from dipy.tracking.utils import density_map
 from . import config
 from .config import targetLabels
 
+# Convert ACPC_to_MNI xfm in fsl format to ANTS
+# Function inverts the 2nd axis (AP persumably)
+def convertfslxfm_to_ANTS(acpc_to_mni_xfm_fsl,acpc_to_mni_xfm_ANTS)
+    invert_axis = 1
+    nifti = nib.load(acpc_to_mni_xfm_fsl)
+    voxels = nifti.get_fdata()
+    voxels[:,:,:,invert_axis] = -1 * voxels[:,:,:,invert_axis]
+    nifti_out = nib.Nifti1Image(voxels, nifti.affine, header=nifti.header)
+    nib.save(nifti_out, acpc_to_mni_xfm_ANTS)
+    cmd = ['3dresample', '-master', str(config.MNI_ref_image),
+        '-prefix', str(acpc_to_mni_xfm_ANTS),
+        '-input', str(acpc_to_mni_xfm_ANTS)]
+    run(cmd, check=True)
+
+
 #Transform centroid coordinates from ACPC to MNI space
 def transform_centerofmass_to_mni(acpc_centerofmass, acpc_to_mni_xfm, acpc_to_mni_xfm_itk,centerofmass_mni):
-    cmd = ['wb_command', '-convert-warpfield', '-from-fnirt', str(acpc_to_mni_xfm), str(config.parcellationPath), 
-        '-to-itk', str(acpc_to_mni_xfm_itk)] #Convert transform from fsl to ANTs format (itk)
-    run(cmd, check=True)
+    convertfslxfm_to_ANTS(acpc_to_mni_xfm,acpc_to_mni_xfm_itk)
+    #cmd = ['wb_command', '-convert-warpfield', '-from-fnirt', str(acpc_to_mni_xfm), str(config.parcellationPath), 
+        #'-to-itk', str(acpc_to_mni_xfm_itk)] #Convert transform from fsl to ANTs format (itk)
+    #run(cmd, check=True)
+
     #Apply converted acpc to mni xfm to centerofmass
     #create csv containing centerofmass outputs
     with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp:
@@ -79,7 +96,7 @@ def generate_centroid(cwd):
                 num_slices = np.shape(in_img)[APaxis]
                 out_file = saveFigDir / ('%s_%04d_%s_centerofmass_withinALIC' % (track_file.stem, iTarget, targetStr)) #output center of mass image
                 mni_out_file = saveFigDir / ('%s_%04d_%s_centerofmass_withinALIC_mni' % (track_file.stem, iTarget, targetStr)) #output centroids in mni space
-                centerofmass = np.zeros([num_slices,3]) #numerical array corresponding to x,y,z coordinates of centroid
+                centerofmass = np.zeros([num_slices,3]) #numerical array corresponding to x,y,z coordinates of centroid in acpc
                 for iSlice in range(num_slices): #interating over total number of coronal slides of input image
                     img_slice = in_img[:,iSlice,:] #an individual slice
                     tmp = ndimage.center_of_mass(img_slice, labels=None, index=None) #step that calculates COM for each slice
