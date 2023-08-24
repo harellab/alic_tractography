@@ -33,7 +33,7 @@ from .config import targetLabels
 
 # Convert ACPC_to_MNI xfm in fsl format to ANTS
 # Function inverts the 2nd axis (AP persumably)
-def convertfslxfm_to_ANTS(acpc_to_mni_xfm_fsl,acpc_to_mni_xfm_ANTS)
+def convertfslxfm_to_ANTS(acpc_to_mni_xfm_fsl,acpc_to_mni_xfm_ANTS):
     invert_axis = 1
     nifti = nib.load(acpc_to_mni_xfm_fsl)
     voxels = nifti.get_fdata()
