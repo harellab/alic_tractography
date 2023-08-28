@@ -31,6 +31,8 @@ bvalsPath = data_dir / 'bvals'
 bvecsPath = data_dir / 'bvecs'
 #ParcellationFsPath = data_dir / 'mri/aparc+aseg.mgz'
 MNI_ref_image = OCD_PIPELINE_DIR / 'indata' / 'MNI152_T1_1mm_brain.nii.gz'
+acpc_ref_image = parcellationPath
+xfm_header_template = OCD_PIPELINE_DIR / 'indata' / 'xfm_header_template.hdr'
 rACC_mod_aparc_aseg = data_dir / 'rACC_mod_aparc_aseg.nii.gz'
 rACC_split_labels = {11026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_ventral.nii.gz',
                      21026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_dorsal.nii.gz',
@@ -56,4 +58,4 @@ lutPath = data_dir / 'FreesurferLookup.csv'
 saveFigDir = Path( 'output' )
 
 #acpc_to_MNI_xfm in ANTs format
-acpc_to_mni_xfm_itk = data_dir / 'acpc_to_mni_xfm_itk.nii.gz'
+mni_to_acpc_xfm_itk = data_dir / 'mni_to_acpc_xfm_itk.nii.gz'

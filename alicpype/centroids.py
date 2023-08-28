@@ -33,40 +33,50 @@ from .config import targetLabels
 
 # Convert ACPC_to_MNI xfm in fsl format to ANTS
 # Function inverts the 2nd axis (AP persumably)
-def convertfslxfm_to_ANTS(acpc_to_mni_xfm_fsl,acpc_to_mni_xfm_ANTS):
-    invert_axis = 1
-    nifti = nib.load(acpc_to_mni_xfm_fsl)
-    voxels = nifti.get_fdata()
-    voxels[:,:,:,invert_axis] = -1 * voxels[:,:,:,invert_axis]
-    nifti_out = nib.Nifti1Image(voxels, nifti.affine, header=nifti.header)
-    nib.save(nifti_out, acpc_to_mni_xfm_ANTS)
-    cmd = ['3dresample', '-master', str(config.MNI_ref_image),
+def convertfslxfm_to_ANTS(acpc_to_mni_xfm_fsl,acpc_to_mni_xfm_ANTS, acpc_ref_image):
+    if acpc_to_mni_xfm_ANTS.is_file():
+        os.remove(acpc_to_mni_xfm_ANTS)
+    cmd = ['3dresample', '-master', str(acpc_ref_image),
         '-prefix', str(acpc_to_mni_xfm_ANTS),
-        '-input', str(acpc_to_mni_xfm_ANTS)]
+        '-input', str(acpc_to_mni_xfm_fsl)]
     run(cmd, check=True)
+    
+    add_dimensions(acpc_to_mni_xfm_ANTS, acpc_to_mni_xfm_ANTS)
+    invert_axis = 1
+    nifti = nib.load(acpc_to_mni_xfm_ANTS)
+    voxels = nifti.get_fdata()
+    voxels[:,:,:,:,invert_axis] = -1 * voxels[:,:,:,:,invert_axis]
+    xfm_hdr_template = nib.load(config.xfm_header_template).header
+    nifti_out = nib.Nifti1Image(voxels, nifti.affine, header=xfm_hdr_template)
+    nib.save(nifti_out, acpc_to_mni_xfm_ANTS)
 
+# insert extra dimensions (to resamples ANTS transform)
+def add_dimensions(nifti_in, nifti_out):
+    nifti = nib.load(nifti_in)
+    affine = nifti.affine
+    #print(header)
+    voxels = nifti.get_fdata()
+    voxels = np.squeeze(voxels)
+    voxels = np.expand_dims(voxels, 3)
+
+    #print(np.shape(voxels)) # should be (?, ?, ?, 1, 3)
+    nifti_itk = nib.Nifti1Image(voxels, affine)
+    nib.save(nifti_itk, nifti_out)
 
 #Transform centroid coordinates from ACPC to MNI space
-def transform_centerofmass_to_mni(acpc_centerofmass, acpc_to_mni_xfm, acpc_to_mni_xfm_itk,centerofmass_mni):
-    convertfslxfm_to_ANTS(acpc_to_mni_xfm,acpc_to_mni_xfm_itk)
-    #cmd = ['wb_command', '-convert-warpfield', '-from-fnirt', str(acpc_to_mni_xfm), str(config.parcellationPath), 
-        #'-to-itk', str(acpc_to_mni_xfm_itk)] #Convert transform from fsl to ANTs format (itk)
-    #run(cmd, check=True)
-
-    #Apply converted acpc to mni xfm to centerofmass
-    #create csv containing centerofmass outputs
+# Need to use the inverse fsl xfm (mni to acpc, NOT acpc to mni), transforming points in the inverse of images
+def transform_centerofmass_to_mni(acpc_centerofmass, mni_to_acpc_xfm_itk):
     with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp:
-        np.savetxt(centerofmasstemp.name, acpc_centerofmass, delimiter=",") 
-        cmd = ['antsApplyTransformsToPoints', 
-            '-d', '3',
-             '-i', centerofmasstemp.name, 
-             '-o', str(centerofmass_mni),
-             '-t', f'[{str(acpc_to_mni_xfm_itk)},0]']
-        print(cmd)
-        run(cmd, check=True)
-    #convert centerofmass_mni into 3D slicer compatible csv
-
-
+        with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp_mni:
+            np.savetxt(centerofmasstemp.name, acpc_centerofmass, delimiter=",", header="r,a,s")
+            cmd = ['antsApplyTransformsToPoints', 
+                '-d', '3',
+                '-i', centerofmasstemp.name, 
+                '-o', str(centerofmasstemp_mni.name),
+                '-t', f'[{str(mni_to_acpc_xfm_itk)},0]']
+            run(cmd, check=True)
+            mni_centerofmass = np.loadtxt(centerofmasstemp_mni.name, delimiter=",", skiprows=1)
+            return mni_centerofmass
 
 def generate_centroid(cwd):
     cwd = Path(cwd)
@@ -82,7 +92,8 @@ def generate_centroid(cwd):
     saveFigDir = cwd / config.saveFigDir
 
     APaxis = 1
-
+    convertfslxfm_to_ANTS(cwd/config.mni_to_acpc_xfm, cwd/config.mni_to_acpc_xfm_itk, 
+        cwd/config.acpc_ref_image)
     for iSide in ['left', 'right']: #iterate over each hemisphere
         ALIC_mask = nib.load(ALIC_mask_dir[iSide])#loading ALIC mask
         for track_file in track_files[iSide]: 
@@ -94,7 +105,7 @@ def generate_centroid(cwd):
                 resample_ALIC_mask = dipy.align.resample(ALIC_mask,in_nifti) #resample ALIC mask nifti into heatmap nifti dimensions
                 in_img = in_img*resample_ALIC_mask.get_fdata() #multiply ALIC density map voxel array by resampled ALIC mask array
                 num_slices = np.shape(in_img)[APaxis]
-                out_file = saveFigDir / ('%s_%04d_%s_centerofmass_withinALIC' % (track_file.stem, iTarget, targetStr)) #output center of mass image
+                out_file = saveFigDir / ('%s_%04d_%s_centerofmass_withinALIC' % (track_file.stem, iTarget, targetStr)) #output center of mass image in acpc
                 mni_out_file = saveFigDir / ('%s_%04d_%s_centerofmass_withinALIC_mni' % (track_file.stem, iTarget, targetStr)) #output centroids in mni space
                 centerofmass = np.zeros([num_slices,3]) #numerical array corresponding to x,y,z coordinates of centroid in acpc
                 for iSlice in range(num_slices): #interating over total number of coronal slides of input image
@@ -103,31 +114,28 @@ def generate_centroid(cwd):
                     centerofmass[iSlice,:] = [tmp[0],iSlice,tmp[1]] #adding iSlice at APaxis=1
                 centerofmass = centerofmass[~np.any(np.isnan(centerofmass),axis=1)]
                 nib.affines.apply_affine(in_nifti.affine, centerofmass, inplace=True)
-#TODO define new function
-                #np.savetxt(out_file.with_suffix('.csv'), centerofmass, delimiter=",") #save output file as a .csv for all slices
-                # make a Pandas dataframe of the location data and save it
-                n_points = np.shape(centerofmass)[0]
-                # point_labels = [f'{targetStr}_{i}' for i in range(n_points)]
-                column_labels = ['label', 'r','a','s','defined','selected','visible','locked','description']
-                # col_defined = np.ones(point_labels, dtype=np.int)
-                # col_selected = np.zeros(point_labels, dtype=np.int)
-                # col_visible = np.ones(point_labels, dtype=np.int)
-                # col_locked = np.zeros(point_labels, dtype=np.int)
-                # description = ['' for i in range(n_points)]
-                table_data = {'label': [f'{targetStr}_{i}' for i in range(n_points)], 
-                    'r': centerofmass[:,0],
-                    'a': centerofmass[:,1],
-                    's': centerofmass[:,2],
-                    'defined': np.ones(n_points, dtype=int),
-                    'selected': np.zeros(n_points, dtype=int),
-                    'visible': np.ones(n_points, dtype=int),
-                    'locked': np.zeros(n_points, dtype=int),
-                    'description':['' for i in range(n_points)]}
-                table = pd.DataFrame(table_data, columns=column_labels)
-                table.set_index('label')
-                table.to_csv(out_file.with_suffix('.csv'), index=False)
-                print(mni_out_file)
                 centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
-                    cwd/config.acpc_to_mni_xfm, cwd/config.acpc_to_mni_xfm_itk,
-                        mni_out_file.with_suffix('.csv'))
-   
+                    cwd/config.mni_to_acpc_xfm_itk)
+
+                #export centroids in acpc (slicer compatible)
+                save_centroids(centerofmass, targetStr, out_file)
+
+                #export centroids in mni (slicer compatible)
+                save_centroids(centerofmass_mni, targetStr, mni_out_file)
+              
+def save_centroids(centerofmass, target_label, out_file):
+    """ Generate and save slicer-compatible csv containing centroids """
+    n_points = np.shape(centerofmass)[0]
+    column_labels = ['label', 'r','a','s','defined','selected','visible','locked','description']
+    table_data = {'label': [f'{target_label}_{i}' for i in range(n_points)], 
+        'r': centerofmass[:,0],
+        'a': centerofmass[:,1],
+        's': centerofmass[:,2],
+        'defined': np.ones(n_points, dtype=int),
+        'selected': np.zeros(n_points, dtype=int),
+        'visible': np.ones(n_points, dtype=int),
+        'locked': np.zeros(n_points, dtype=int),
+        'description':['' for i in range(n_points)]}
+    table = pd.DataFrame(table_data, columns=column_labels)
+    table.set_index('label')
+    table.to_csv(out_file.with_suffix('.csv'), index=False)
