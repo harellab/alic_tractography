@@ -122,12 +122,18 @@ def generate_centroid(cwd):
 
                 #export centroids in mni (slicer compatible)
                 save_centroids(centerofmass_mni, targetStr, mni_out_file)
-              
+    
+    
 def save_centroids(centerofmass, target_label, out_file):
     """ Generate and save slicer-compatible csv containing centroids """
     n_points = np.shape(centerofmass)[0]
     column_labels = ['label', 'r','a','s','defined','selected','visible','locked','description']
-    table_data = {'label': [f'{target_label}_{i}' for i in range(n_points)], 
+    if isinstance(target_label, str):
+        label_list = [f'{target_label}_{i}' for i in range(n_points)]
+    else:
+        label_list = target_label
+        #case when target_label list is given
+    table_data = {'label': label_list, 
         'r': centerofmass[:,0],
         'a': centerofmass[:,1],
         's': centerofmass[:,2],
@@ -139,3 +145,34 @@ def save_centroids(centerofmass, target_label, out_file):
     table = pd.DataFrame(table_data, columns=column_labels)
     table.set_index('label')
     table.to_csv(out_file.with_suffix('.csv'), index=False)
+
+
+def make_centroids_summary(project_dir, subject_list):
+    """generate a summary csv which includes centroids across all targets and subjects for a single defined coronal slice"""
+    project_dir = Path(project_dir)
+    out_dir = project_dir / 'output'
+    os.makedirs(out_dir, exist_ok=True)
+    for iSide in ['left', 'right']:
+        for iTarget in targetLabels[iSide]:
+            # load Freesurfer labels
+            lookupTable=config.freesurfer_lookup_table
+            targetStr = lookupTable.loc[iTarget, 'LabelName:'] 
+            outfile = out_dir / f'{iTarget}_{targetStr}_summary_centroids_mni.csv' 
+            print(outfile) #TODO delete me
+            target_points = []
+            subject_target_label = []
+            for iSubject in subject_list:
+                subject_dir = project_dir / iSubject / 'OCD_pipeline'
+                #load each csv containing centroids in mni space
+                track_file = config.track_files[iSide][0]
+                input_csv_path = subject_dir / 'output' / ('%s_%04d_%s_centerofmass_withinALIC_mni.csv' % (track_file.stem, iTarget, targetStr))
+                input_csv = np.loadtxt(input_csv_path, delimiter=",", skiprows=1, usecols=[1,2,3])
+                #extract centroid coordinates at a single defined slice (ac_displayed_slice)
+                target_point = [np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,0]),
+                    config.ac_displayed_slice, 
+                    np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,2])]
+                #concatenate target_point from all subjects (target_points)
+                target_points.append(target_point)
+                subject_target_label.append(f'{targetStr}_{iSubject}')
+            #save out target_points array in slicer formatted csv
+            save_centroids(target_points, subject_target_label, outfile)

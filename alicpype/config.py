@@ -4,6 +4,7 @@
 import sys
 from pathlib import Path
 import os
+import pandas as pd
 
 ALICPYPE_DIR = Path(__file__).resolve().parent
 OCD_PIPELINE_DIR = ALICPYPE_DIR.parent
@@ -52,10 +53,19 @@ mni_to_acpc_xfm = data_dir / 'standard2acpc_dc.nii.gz'
 
 
 # Freesurfer lookup table, e.g. https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT
-lutPath = data_dir / 'FreesurferLookup.csv'
+lutPath = data_dir / 'FreesurferLookup.csv' #subject-specific path. TODO switch to config.freesurferLookupTable wherever used
+freesurfer_lookup_table =pd.read_csv(
+        OCD_PIPELINE_DIR / 'indata/FreesurferLookup.csv',
+        index_col='#No.')
 
 #tckPath=Path('/home/naxos2-raid25/sreta001/DBS_for_sreta001/DBS-OCD/OCD004/Code/app-track_aLIC_harelpreproc/output/track.tck')
 saveFigDir = Path( 'output' )
 
 #acpc_to_MNI_xfm in ANTs format
 mni_to_acpc_xfm_itk = data_dir / 'mni_to_acpc_xfm_itk.nii.gz'
+
+#anterior communisure displayed slice (3mm anterior of the origin)
+ac_displayed_slice = 3.0
+
+#path to project-specific directory (ex. 3T_HCP_visit1)
+project_dir = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1/'
