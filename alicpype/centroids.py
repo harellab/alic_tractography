@@ -127,6 +127,7 @@ def generate_centroid(cwd):
 def save_centroids(centerofmass, target_label, out_file):
     """ Generate and save slicer-compatible csv containing centroids """
     n_points = np.shape(centerofmass)[0]
+    centerofmass = np.array(centerofmass, dtype=float)
     column_labels = ['label', 'r','a','s','defined','selected','visible','locked','description']
     if isinstance(target_label, str):
         label_list = [f'{target_label}_{i}' for i in range(n_points)]
