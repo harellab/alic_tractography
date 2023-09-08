@@ -50,7 +50,7 @@ def import_hcp_subject(subject, hcp_root, cwd): #defining function
         os.makedirs(
             (cwd / dest_file).parent, 
             exist_ok=True)
-        shutil.copy(
+        shutil.copyfile(
             subject_hcp_dir / source_file,
             cwd / dest_file)
 
