@@ -80,15 +80,15 @@ def transform_centerofmass_to_mni(acpc_centerofmass, mni_to_acpc_xfm_itk):
 
 def generate_centroid(cwd):
     cwd = Path(cwd)
-    ALIC_mask_dir = {'left': config.OCD_PIPELINE_DIR / 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_left.nii.gz',
-                    'right': config.OCD_PIPELINE_DIR / 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_right.nii.gz'}
+    ALIC_mask_dir = {'left': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_left.nii.gz',
+                    'right': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_right.nii.gz'}
     #TODO, not a dir, change to "file"
 
     #paths to input data
     track_files = {k: [cwd / i for i in v]
         for k, v in config.track_files.items()}
-    # load Freesurfer labels
-    lookupTable=pd.read_csv(cwd / config.lutPath,index_col='#No.')
+    # load Freesurfer labelsfreesurfer_lookup_table
+    lookupTable = config.freesurfer_lookup_table
     saveFigDir = cwd / config.saveFigDir
 
     APaxis = 1

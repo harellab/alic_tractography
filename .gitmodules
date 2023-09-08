@@ -1,3 +1,4 @@
 [submodule "app-track_aLIC"]
 	path = app-track_aLIC
 	url = git@github.umn.edu:HarelLab/app-track_aLIC.git
+	ignore = dirty

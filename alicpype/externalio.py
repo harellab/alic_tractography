@@ -11,8 +11,8 @@ def import_hcp_subject(subject, hcp_root, cwd): #defining function
     hcp_root = Path(hcp_root)
     subject = str(subject) 
     cwd = Path(cwd) 
-    assert(cwd.is_dir())
     print(cwd)
+    assert(hcp_root.is_dir())
     subject_hcp_dir = hcp_root / subject
 
 # Dictionary of all images copied

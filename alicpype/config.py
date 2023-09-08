@@ -69,3 +69,6 @@ ac_displayed_slice = 3.0
 
 #path to project-specific directory (ex. 3T_HCP_visit1)
 project_dir = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1/'
+
+#path to SCC mask to divide rACC
+splitraccplane = OCD_PIPELINE_DIR / 'indata/subcallosal_cingulate_mni.nii.gz'

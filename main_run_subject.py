@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+#!/usr/bin/env conda run -p /opt/local/dbs/bin/mambaforge/envs/DBSv1p4 python
+
 import alicpype as alic
 from pathlib import Path
 import sys 

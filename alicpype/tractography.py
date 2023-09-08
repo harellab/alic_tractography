@@ -20,6 +20,12 @@ def generate_alic(cwd):
         else:
             warn('%s doesn''t exist!' % str(abs_file))
 
+    #git clone app-track_aLIC
+    run(['git', 'clone', str(config.OCD_PIPELINE_DIR/'app-track_aLIC'), str(cwd/'app-track_aLIC')], check=True)
+
+    #git submodule update
+    run(['git', 'submodule', 'update', '--init', '--recursive'], cwd=cwd/'app-track_aLIC', check=True)
+
     # link indata to app-track_aLIC/indata
     try:
         os.symlink('../indata' , cwd/'app-track_aLIC/indata')
