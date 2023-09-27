@@ -172,11 +172,15 @@ def make_centroids_summary(project_dir, subject_list):
                 input_csv_path = subject_dir / 'output' / ('%s_%04d_%s_centerofmass_withinALIC_mni.csv' % (track_file.stem, iTarget, targetStr))
                 input_csv = np.loadtxt(input_csv_path, delimiter=",", skiprows=1, usecols=[1,2,3])
                 #extract centroid coordinates at a single defined slice (ac_displayed_slice)
-                target_point = [np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,0]),
-                    config.ac_displayed_slice, 
-                    np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,2])]
-                #concatenate target_point from all subjects (target_points)
-                target_points.append(target_point)
-                subject_target_label.append(f'{targetStr}_{iSubject}')
+                #TODO:if else statement between 176-181 
+                if input_csv.size > 0: #if input_csv array is not empty
+                    target_point = [np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,0]),
+                        config.ac_displayed_slice, 
+                        np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,2])]
+                    #concatenate target_point from all subjects (target_points)
+                    target_points.append(target_point)
+                    subject_target_label.append(f'{targetStr}_{iSubject}')
+                else: print("csv for this target is empty")
+                
             #save out target_points array in slicer formatted csv
             save_centroids(target_points, subject_target_label, outfile)
