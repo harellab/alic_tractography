@@ -65,6 +65,7 @@ def add_dimensions(nifti_in, nifti_out):
 
 #Transform centroid coordinates from ACPC to MNI space
 # Need to use the inverse fsl xfm (mni to acpc, NOT acpc to mni), transforming points in the inverse of images
+#TODO delete this
 def transform_centerofmass_to_mni(acpc_centerofmass, mni_to_acpc_xfm_itk):
     n_points = np.shape(acpc_centerofmass)[0]
     if n_points > 0:
@@ -81,21 +82,23 @@ def transform_centerofmass_to_mni(acpc_centerofmass, mni_to_acpc_xfm_itk):
                 return mni_centerofmass
     else: return acpc_centerofmass 
 
-def transform_centerofmass_to_mni(acpc_centerofmass, mni_centerofmass):
-    n_points = np.shape(acpc_centerofmass)[0]
+def transform_centerofmass_to_mni(input_points, transform_file):
+    n_points = np.shape(input_points)[0]
     if n_points > 0:
-        with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp:
-            with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp_mni:
-                np.savetxt(centerofmasstemp.name, acpc_centerofmass, delimiter=",", header="r,a,s")
+        with NamedTemporaryFile(suffix = '.csv') as input_points_file:
+            with NamedTemporaryFile(suffix = '.csv') as output_points_file:
+                np.savetxt(input_points_file.name, input_points, delimiter=",", header="r,a,s")
                 p = run(
                     ['Slicer',
-                    '--no-main-window',
-                    '--python-script', str(slicerxfm),
-                    '--output', str(mni_centerofmass),
-                    str(acpc_centerofmass)])
-                mni_centerofmass = np.loadtxt(centerofmasstemp_mni.name, delimiter=",", skiprows=1)
-                return mni_centerofmass
-    else: return acpc_centerofmass 
+                        '--no-main-window',
+                        '--python-script', str(config.slicer_apply_xfm_script),
+                        '--output', str(output_points_file.name),
+                        '--transform', str(transform_file),
+                        str(input_points_file.name)],
+                    check=True)
+                output_points = np.loadtxt(output_points_file.name, delimiter=",", skiprows=1)
+                return output_points
+    else: return input_points 
 
 
 
