@@ -71,7 +71,7 @@ def transform_centerofmass_to_mni(acpc_centerofmass, mni_to_acpc_xfm_itk):
         with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp:
             with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp_mni:
                 np.savetxt(centerofmasstemp.name, acpc_centerofmass, delimiter=",", header="r,a,s")
-                cmd = ['antsApplyTransformsToPoints', 
+                cmd = ['antsApplyTransformsToPoints', #TODO: reference to slicer version of command
                     '-d', '3',
                     '-i', centerofmasstemp.name, 
                     '-o', str(centerofmasstemp_mni.name),
@@ -80,6 +80,24 @@ def transform_centerofmass_to_mni(acpc_centerofmass, mni_to_acpc_xfm_itk):
                 mni_centerofmass = np.loadtxt(centerofmasstemp_mni.name, delimiter=",", skiprows=1)
                 return mni_centerofmass
     else: return acpc_centerofmass 
+
+def transform_centerofmass_to_mni(acpc_centerofmass, mni_centerofmass):
+    n_points = np.shape(acpc_centerofmass)[0]
+    if n_points > 0:
+        with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp:
+            with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp_mni:
+                np.savetxt(centerofmasstemp.name, acpc_centerofmass, delimiter=",", header="r,a,s")
+                p = run(
+                    ['Slicer',
+                    '--no-main-window',
+                    '--python-script', str(slicerxfm),
+                    '--output', str(mni_centerofmass),
+                    str(acpc_centerofmass)])
+                mni_centerofmass = np.loadtxt(centerofmasstemp_mni.name, delimiter=",", skiprows=1)
+                return mni_centerofmass
+    else: return acpc_centerofmass 
+
+
 
 def generate_centroid(cwd):
     cwd = Path(cwd)
@@ -169,14 +187,14 @@ def make_centroids_summary(project_dir, subject_list):
                 subject_dir = project_dir / iSubject / 'OCD_pipeline'
                 #load each csv containing centroids in mni space
                 track_file = config.track_files[iSide][0]
-                input_csv_path = subject_dir / 'output' / ('%s_%04d_%s_centerofmass_withinALIC_mni.csv' % (track_file.stem, iTarget, targetStr))
+                input_csv_path = subject_dir / 'output' / ('%s_%04d_%s_centerofmass_withinALIC_mni_3mm.csv' % (track_file.stem, iTarget, targetStr))
                 input_csv = np.loadtxt(input_csv_path, delimiter=",", skiprows=1, usecols=[1,2,3])
                 #extract centroid coordinates at a single defined slice (ac_displayed_slice)
                 #TODO:if else statement between 176-181 
                 if input_csv.size > 0: #if input_csv array is not empty
-                    target_point = [np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,0]),
-                        config.ac_displayed_slice, 
-                        np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,2])]
+                    target_point = [np.interp(config.ac_displayed_slice_3mm, input_csv[:,1], input_csv[:,0]),
+                        config.ac_displayed_slice_3mm, 
+                        np.interp(config.ac_displayed_slice_3mm, input_csv[:,1], input_csv[:,2])]
                     #concatenate target_point from all subjects (target_points)
                     target_points.append(target_point)
                     subject_target_label.append(f'{targetStr}_{iSubject}')

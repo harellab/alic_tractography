@@ -65,7 +65,9 @@ saveFigDir = Path( 'output' )
 mni_to_acpc_xfm_itk = data_dir / 'mni_to_acpc_xfm_itk.nii.gz'
 
 #anterior communisure displayed slice (3mm anterior of the origin)
-ac_displayed_slice = 3.0
+ac_displayed_slice_3mm = 3.0
+posterior3mm_displayed_slice = -3.0
+anterior9mm_displayed_slice = 9.0
 
 #path to project-specific directory (ex. 3T_HCP_visit1)
 project_dir = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1/'

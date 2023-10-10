@@ -68,13 +68,13 @@ def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
     # register_acpc()
 
     # generate whole ALIC tractography (tractography.py)
-    generate_alic(cwd)
+    #generate_alic(cwd)
 
     # # generate split rACC ROI (divideracc.py)
-    split_racc(cwd)
+    #split_racc(cwd)
 
     # # subsegment ALIC based on PFC ROIs (subsegment.py)
-    subsegment_alic(cwd)
+    #subsegment_alic(cwd)
 
     # # generate subsegmented heatmaps (heatmap.py)
     # #generate_heatmap(subject, cwd)

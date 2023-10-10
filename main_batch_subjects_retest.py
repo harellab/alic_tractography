@@ -6,8 +6,8 @@ import sys
 import numpy as np
 from traceback import print_exc
 
-TEST_ALIC_DIR = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1'
-TEST_HCP_DIR = '/home/udall-raid7/HCP_data/Data/3T_HCP_visit1'
+TEST_ALIC_DIR = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_retest'
+TEST_HCP_DIR = '/home/udall-raid7/HCP_data/Data/3T_HCP_retest'
 
 def main():
     """
@@ -16,7 +16,6 @@ def main():
     """
     subject_list_file = Path(sys.argv[1]).expanduser().resolve()
     subject_list = np.loadtxt(subject_list_file, delimiter=',', dtype=str)
-    print(subject_list)
 
     # call alicpype tasks run_subject on each subject in list
     for subject_id in subject_list:
