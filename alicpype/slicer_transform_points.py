@@ -4,8 +4,9 @@
 import os
 import sys
 import shutil
-from pathlib import Path
 import argparse
+import numpy as np
+
 
 def parse_args(): #TODO
     parser = argparse.ArgumentParser()
@@ -15,12 +16,12 @@ def parse_args(): #TODO
             + '(R,A,S) coordinates, with a single header line.')
     parser.add_argument(
         '-o', '--output',
-        default=None,
+        #default=None,
         help='Path of CSV-format output file to write. Will be overwritten ' 
             + 'if it already exists.')
     parser.add_argument(
         '-t', '--transform',
-        default=None,
+        #default=None,
         help='path of ITK-format transform file.'
     )
     parser.add_argument(
@@ -30,8 +31,8 @@ def parse_args(): #TODO
         help='Keep Slicer open when finished. Default False.'
     )
     args = parser.parse_args()
-    if args.output is None:
-        args.output = os.path.splitext(args.output)[0] + '.mrb'
+    #if args.output is None:
+        #args.output = os.path.splitext(args.output)[0] + '.mrb'
 
     return args
 
@@ -39,7 +40,26 @@ def transform_points_csv(infile, transform, outfile):
     print(infile)
     print(transform)
     print(outfile)
-    pass #TODO
+    # load slicer transform (node) from file
+    transform_node = slicer.util.loadTransform(transform)
+    
+    # load input csvs in original space
+    inputarray = np.loadtxt(str(infile), delimiter=",", skiprows=1)
+    # turn numpy array into fiducial list
+    fiducial_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode") #creates an empty fiducial list
+    slicer.util.updateMarkupsControlPointsFromArray(fiducial_node, inputarray, world = False) #insert input csv content into fiducial list
+
+    # apply transform to fiducials
+    fiducial_node.SetAndObserveTransformNodeID(transform_node.GetID())
+
+    # harden the transform
+    fiducial_node.HardenTransform()
+
+    # convert fiducial list back to an array
+    outputarray = slicer.util.arrayFromMarkupsControlPoints(fiducial_node, world=False)
+
+    # save transformed array (R,A,S)
+    np.savetxt(str(outfile), outputarray, delimiter=",", header="r,a,s")
 
 def main():
     exit_status = 0 #doesn't do anything yet. need to catch errors

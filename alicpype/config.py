@@ -74,6 +74,9 @@ saveFigDir = Path( 'output' )
 #acpc_to_MNI_xfm in ANTs format
 mni_to_acpc_xfm_itk = data_dir / 'mni_to_acpc_xfm_itk.nii.gz'
 
+#acpc_to_MNI_xfm in ANTs format
+acpc_to_mni_xfm_itk = data_dir / 'acpc_to_mni_xfm_itk.nii.gz'
+
 #anterior communisure displayed slice (3mm anterior of the origin)
 ac_displayed_slice_3mm = 3.0
 posterior3mm_displayed_slice = -3.0

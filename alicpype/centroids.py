@@ -64,24 +64,6 @@ def add_dimensions(nifti_in, nifti_out):
     nib.save(nifti_itk, nifti_out)
 
 #Transform centroid coordinates from ACPC to MNI space
-# Need to use the inverse fsl xfm (mni to acpc, NOT acpc to mni), transforming points in the inverse of images
-#TODO delete this
-def transform_centerofmass_to_mni(acpc_centerofmass, mni_to_acpc_xfm_itk):
-    n_points = np.shape(acpc_centerofmass)[0]
-    if n_points > 0:
-        with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp:
-            with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp_mni:
-                np.savetxt(centerofmasstemp.name, acpc_centerofmass, delimiter=",", header="r,a,s")
-                cmd = ['antsApplyTransformsToPoints', #TODO: reference to slicer version of command
-                    '-d', '3',
-                    '-i', centerofmasstemp.name, 
-                    '-o', str(centerofmasstemp_mni.name),
-                    '-t', f'[{str(mni_to_acpc_xfm_itk)},0]']
-                run(cmd, check=True)
-                mni_centerofmass = np.loadtxt(centerofmasstemp_mni.name, delimiter=",", skiprows=1)
-                return mni_centerofmass
-    else: return acpc_centerofmass 
-
 def transform_centerofmass_to_mni(input_points, transform_file):
     n_points = np.shape(input_points)[0]
     if n_points > 0:
@@ -116,8 +98,8 @@ def generate_centroid(cwd):
     saveFigDir = cwd / config.saveFigDir
 
     APaxis = 1
-    convertfslxfm_to_ANTS(cwd/config.mni_to_acpc_xfm, cwd/config.mni_to_acpc_xfm_itk, 
-        cwd/config.acpc_ref_image)
+    convertfslxfm_to_ANTS(cwd/config.acpc_to_mni_xfm, cwd/config.acpc_to_mni_xfm_itk, 
+        cwd/config.MNI_ref_image)
     for iSide in ['left', 'right']: #iterate over each hemisphere
         ALIC_mask = nib.load(ALIC_mask_dir[iSide])#loading ALIC mask
         for track_file in track_files[iSide]: 
@@ -139,7 +121,7 @@ def generate_centroid(cwd):
                 centerofmass = centerofmass[~np.any(np.isnan(centerofmass),axis=1)]
                 nib.affines.apply_affine(in_nifti.affine, centerofmass, inplace=True)
                 centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
-                    cwd/config.mni_to_acpc_xfm_itk)
+                    cwd/config.acpc_to_mni_xfm_itk)
 
                 #export centroids in acpc (slicer compatible)
                 save_centroids(centerofmass, targetStr, out_file)
