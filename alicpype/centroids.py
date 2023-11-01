@@ -164,26 +164,28 @@ def make_centroids_summary(project_dir, subject_list):
             # load Freesurfer labels
             lookupTable=config.freesurfer_lookup_table
             targetStr = lookupTable.loc[iTarget, 'LabelName:'] 
-            outfile = out_dir / f'{iTarget}_{targetStr}_summary_centroids_mni.csv' 
+            outfile = {k: out_dir / f'{iTarget}_{targetStr}_{k}mm_summary_centroids_mni.csv' for k in config.coronal_slices_displayed_mm}
             print(outfile) #TODO delete me
-            target_points = []
+            target_points = {k: [] for k in config.coronal_slices_displayed_mm}
             subject_target_label = []
             for iSubject in subject_list:
                 subject_dir = project_dir / iSubject / 'OCD_pipeline'
                 #load each csv containing centroids in mni space
                 track_file = config.track_files[iSide][0]
-                input_csv_path = subject_dir / 'output' / ('%s_%04d_%s_centerofmass_withinALIC_mni_3mm.csv' % (track_file.stem, iTarget, targetStr))
+                input_csv_path = subject_dir / 'output' / ('%s_%04d_%s_centerofmass_withinALIC_mni.csv' % (track_file.stem, iTarget, targetStr))
                 input_csv = np.loadtxt(input_csv_path, delimiter=",", skiprows=1, usecols=[1,2,3])
                 #extract centroid coordinates at a single defined slice (ac_displayed_slice)
                 #TODO:if else statement between 176-181 
                 if input_csv.size > 0: #if input_csv array is not empty
-                    target_point = [np.interp(config.ac_displayed_slice_3mm, input_csv[:,1], input_csv[:,0]),
-                        config.ac_displayed_slice_3mm, 
-                        np.interp(config.ac_displayed_slice_3mm, input_csv[:,1], input_csv[:,2])]
-                    #concatenate target_point from all subjects (target_points)
-                    target_points.append(target_point)
+                    for displayed_slice in config.coronal_slices_displayed_mm:
+                        target_point = [np.interp(displayed_slice, input_csv[:,1], input_csv[:,0]), #interpolate r and s coordinates for a specific displayed_slice
+                            displayed_slice, 
+                            np.interp(displayed_slice, input_csv[:,1], input_csv[:,2])]
+                        #concatenate target_point from all subjects (target_points)
+                        target_points[displayed_slice].append(target_point)
                     subject_target_label.append(f'{targetStr}_{iSubject}')
                 else: print("csv for this target is empty")
                 
             #save out target_points array in slicer formatted csv
-            save_centroids(target_points, subject_target_label, outfile)
+            for displayed_slice in config.coronal_slices_displayed_mm:
+                save_centroids(target_points[displayed_slice], subject_target_label, outfile[displayed_slice])

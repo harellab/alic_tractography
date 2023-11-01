@@ -15,7 +15,7 @@ def generate_alic(cwd):
         config.diffPath, config.bvalsPath, config.bvecsPath]
     for i in to_check:
         abs_file = cwd / i
-        if i.is_file():
+        if abs_file.is_file():
             print(f'found {abs_file}')
         else:
             warn('%s doesn''t exist!' % str(abs_file))

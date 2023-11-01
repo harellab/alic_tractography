@@ -43,7 +43,8 @@ diffPath = data_dir / 'diffusion_acpc.nii.gz'
 #diff_b0acpc_path = data_dir / 'eddy_wrapped_B0_image_space-acpc.nii.gz'
 #diff_unreg_path = data_dir /'eddy_wrapped_avg_image.nii.gz'
 bvalsPath = data_dir / 'bvals'
-#bvalsPath_b9 = data_dir / 'bvals_b9'
+bvalsPath_raw = data_dir / 'bvals_raw'
+b0_threshold = 65
 bvecsPath = data_dir / 'bvecs'
 #ParcellationFsPath = data_dir / 'mri/aparc+aseg.mgz'
 acpc_ref_image = parcellationPath
@@ -77,10 +78,8 @@ mni_to_acpc_xfm_itk = data_dir / 'mni_to_acpc_xfm_itk.nii.gz'
 #acpc_to_MNI_xfm in ANTs format
 acpc_to_mni_xfm_itk = data_dir / 'acpc_to_mni_xfm_itk.nii.gz'
 
-#anterior communisure displayed slice (3mm anterior of the origin)
-ac_displayed_slice_3mm = 3.0
-posterior3mm_displayed_slice = -3.0
-anterior9mm_displayed_slice = 9.0
+#anterior communisure displayed slice (level of anterior commissure is 3mm, 9mm is anterior, -3mm is posterior)
+coronal_slices_displayed_mm = [9.0, 6.0, 3.0, 0, -3.0]
 
 #path to project-specific directory (ex. 3T_HCP_visit1)
 project_dir = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1/'
