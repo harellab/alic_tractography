@@ -6,6 +6,7 @@ from pathlib import Path
 import os
 import pandas as pd
 
+##---Set up paths within OCD_Pipeline---
 ALICPYPE_DIR = Path(__file__).resolve().parent
 OCD_PIPELINE_DIR = ALICPYPE_DIR.parent
 
@@ -18,6 +19,20 @@ sys.path.append(str(OCD_PIPELINE_DIR / 'wma_pyTools'))
 # setup connectome workbench installation 
 os.environ['PATH'] = '/opt/local/dbs/bin/hcp-workbench-1.4.2/workbench/bin_rh_linux64:'+ os.environ['PATH']
 
+# Script to transform points/fiducials using Slicer
+slicer_apply_xfm_script = ALICPYPE_DIR / 'slicer_transform_points.py'
+
+MNI_ref_image = OCD_PIPELINE_DIR / 'indata' / 'MNI152_T1_1mm_brain.nii.gz'
+xfm_header_template = OCD_PIPELINE_DIR / 'indata' / 'xfm_header_template.hdr'
+freesurfer_lookup_table =pd.read_csv(
+        OCD_PIPELINE_DIR / 'indata/FreesurferLookup.csv',
+        index_col='#No.')
+
+#path to SCC mask to divide rACC
+splitraccplane = OCD_PIPELINE_DIR / 'indata/subcallosal_cingulate_mni.nii.gz'
+
+##---Set up subject-specific paths ---
+
 # define expected inputs and check for them
 data_dir = Path('indata')
 
@@ -28,13 +43,17 @@ diffPath = data_dir / 'diffusion_acpc.nii.gz'
 #diff_b0acpc_path = data_dir / 'eddy_wrapped_B0_image_space-acpc.nii.gz'
 #diff_unreg_path = data_dir /'eddy_wrapped_avg_image.nii.gz'
 bvalsPath = data_dir / 'bvals'
-#bvalsPath_b9 = data_dir / 'bvals_b9'
+bvalsPath_raw = data_dir / 'bvals_raw'
+b0_threshold = 65
 bvecsPath = data_dir / 'bvecs'
 #ParcellationFsPath = data_dir / 'mri/aparc+aseg.mgz'
-MNI_ref_image = OCD_PIPELINE_DIR / 'indata' / 'MNI152_T1_1mm_brain.nii.gz'
 acpc_ref_image = parcellationPath
-xfm_header_template = OCD_PIPELINE_DIR / 'indata' / 'xfm_header_template.hdr'
 rACC_mod_aparc_aseg = data_dir / 'rACC_mod_aparc_aseg.nii.gz'
+
+# transform files
+acpc_to_mni_xfm = data_dir / 'acpc_dc2standard.nii.gz'
+mni_to_acpc_xfm = data_dir / 'standard2acpc_dc.nii.gz'
+
 rACC_split_labels = {11026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_ventral.nii.gz',
                      21026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_dorsal.nii.gz',
                     12026: data_dir / 'rh_rostralanteriorcingulate_ROI_acpc_ventral.nii.gz',
@@ -47,16 +66,8 @@ track_files = {
         'left': [ Path('app-track_aLIC/output/combined_aLIC_left.tck'),],
         'right': [ Path('app-track_aLIC/output/combined_aLIC_right.tck'),]}
 
-# transform files
-acpc_to_mni_xfm = data_dir / 'acpc_dc2standard.nii.gz'
-mni_to_acpc_xfm = data_dir / 'standard2acpc_dc.nii.gz'
-
-
 # Freesurfer lookup table, e.g. https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT
 lutPath = data_dir / 'FreesurferLookup.csv' #subject-specific path. TODO switch to config.freesurferLookupTable wherever used
-freesurfer_lookup_table =pd.read_csv(
-        OCD_PIPELINE_DIR / 'indata/FreesurferLookup.csv',
-        index_col='#No.')
 
 #tckPath=Path('/home/naxos2-raid25/sreta001/DBS_for_sreta001/DBS-OCD/OCD004/Code/app-track_aLIC_harelpreproc/output/track.tck')
 saveFigDir = Path( 'output' )
@@ -64,8 +75,11 @@ saveFigDir = Path( 'output' )
 #acpc_to_MNI_xfm in ANTs format
 mni_to_acpc_xfm_itk = data_dir / 'mni_to_acpc_xfm_itk.nii.gz'
 
-#anterior communisure displayed slice (3mm anterior of the origin)
-ac_displayed_slice = 3.0
+#acpc_to_MNI_xfm in ANTs format
+acpc_to_mni_xfm_itk = data_dir / 'acpc_to_mni_xfm_itk.nii.gz'
+
+#anterior communisure displayed slice (level of anterior commissure is 3mm, 9mm is anterior, -3mm is posterior)
+coronal_slices_displayed_mm = [9.0, 6.0, 3.0, 0, -3.0]
 
 #path to project-specific directory (ex. 3T_HCP_visit1)
 project_dir = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1/'

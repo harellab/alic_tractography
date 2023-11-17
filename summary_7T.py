@@ -5,8 +5,8 @@ import sys
 import numpy as np
 
 #TODO: edit so not hard coded paths
-TEST_ALIC_DIR = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1'
-TEST_HCP_DIR = '/home/udall-raid7/HCP_data/Data/3T_HCP_visit1'
+TEST_ALIC_DIR = '/home/udall-raid7/HCP_data/Data_Processing/7T_HCP' # path to project-specific data processing directory
+TEST_HCP_DIR = '/home/udall-raid7/HCP_data/Data/3T_HCP_visit1' # path to raw data directory
 
 def main():
     """

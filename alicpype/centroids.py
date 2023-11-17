@@ -64,36 +64,42 @@ def add_dimensions(nifti_in, nifti_out):
     nib.save(nifti_itk, nifti_out)
 
 #Transform centroid coordinates from ACPC to MNI space
-# Need to use the inverse fsl xfm (mni to acpc, NOT acpc to mni), transforming points in the inverse of images
-def transform_centerofmass_to_mni(acpc_centerofmass, mni_to_acpc_xfm_itk):
-    with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp:
-        with NamedTemporaryFile(suffix = '.csv') as centerofmasstemp_mni:
-            np.savetxt(centerofmasstemp.name, acpc_centerofmass, delimiter=",", header="r,a,s")
-            cmd = ['antsApplyTransformsToPoints', 
-                '-d', '3',
-                '-i', centerofmasstemp.name, 
-                '-o', str(centerofmasstemp_mni.name),
-                '-t', f'[{str(mni_to_acpc_xfm_itk)},0]']
-            run(cmd, check=True)
-            mni_centerofmass = np.loadtxt(centerofmasstemp_mni.name, delimiter=",", skiprows=1)
-            return mni_centerofmass
+def transform_centerofmass_to_mni(input_points, transform_file):
+    n_points = np.shape(input_points)[0]
+    if n_points > 0:
+        with NamedTemporaryFile(suffix = '.csv') as input_points_file:
+            with NamedTemporaryFile(suffix = '.csv') as output_points_file:
+                np.savetxt(input_points_file.name, input_points, delimiter=",", header="r,a,s")
+                p = run(
+                    ['Slicer',
+                        '--no-main-window',
+                        '--python-script', str(config.slicer_apply_xfm_script),
+                        '--output', str(output_points_file.name),
+                        '--transform', str(transform_file),
+                        str(input_points_file.name)],
+                    check=True)
+                output_points = np.loadtxt(output_points_file.name, delimiter=",", skiprows=1)
+                return output_points
+    else: return input_points 
+
+
 
 def generate_centroid(cwd):
     cwd = Path(cwd)
-    ALIC_mask_dir = {'left': config.OCD_PIPELINE_DIR / 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_left.nii.gz',
-                    'right': config.OCD_PIPELINE_DIR / 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_right.nii.gz'}
+    ALIC_mask_dir = {'left': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_left.nii.gz',
+                    'right': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_right.nii.gz'}
     #TODO, not a dir, change to "file"
 
     #paths to input data
     track_files = {k: [cwd / i for i in v]
         for k, v in config.track_files.items()}
-    # load Freesurfer labels
-    lookupTable=pd.read_csv(cwd / config.lutPath,index_col='#No.')
+    # load Freesurfer labelsfreesurfer_lookup_table
+    lookupTable = config.freesurfer_lookup_table
     saveFigDir = cwd / config.saveFigDir
 
     APaxis = 1
-    convertfslxfm_to_ANTS(cwd/config.mni_to_acpc_xfm, cwd/config.mni_to_acpc_xfm_itk, 
-        cwd/config.acpc_ref_image)
+    convertfslxfm_to_ANTS(cwd/config.acpc_to_mni_xfm, cwd/config.acpc_to_mni_xfm_itk, 
+        cwd/config.MNI_ref_image)
     for iSide in ['left', 'right']: #iterate over each hemisphere
         ALIC_mask = nib.load(ALIC_mask_dir[iSide])#loading ALIC mask
         for track_file in track_files[iSide]: 
@@ -115,7 +121,7 @@ def generate_centroid(cwd):
                 centerofmass = centerofmass[~np.any(np.isnan(centerofmass),axis=1)]
                 nib.affines.apply_affine(in_nifti.affine, centerofmass, inplace=True)
                 centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
-                    cwd/config.mni_to_acpc_xfm_itk)
+                    cwd/config.acpc_to_mni_xfm_itk)
 
                 #export centroids in acpc (slicer compatible)
                 save_centroids(centerofmass, targetStr, out_file)
@@ -158,9 +164,9 @@ def make_centroids_summary(project_dir, subject_list):
             # load Freesurfer labels
             lookupTable=config.freesurfer_lookup_table
             targetStr = lookupTable.loc[iTarget, 'LabelName:'] 
-            outfile = out_dir / f'{iTarget}_{targetStr}_summary_centroids_mni.csv' 
+            outfile = {k: out_dir / f'{iTarget}_{targetStr}_{k}mm_summary_centroids_mni.csv' for k in config.coronal_slices_displayed_mm}
             print(outfile) #TODO delete me
-            target_points = []
+            target_points = {k: [] for k in config.coronal_slices_displayed_mm}
             subject_target_label = []
             for iSubject in subject_list:
                 subject_dir = project_dir / iSubject / 'OCD_pipeline'
@@ -169,11 +175,17 @@ def make_centroids_summary(project_dir, subject_list):
                 input_csv_path = subject_dir / 'output' / ('%s_%04d_%s_centerofmass_withinALIC_mni.csv' % (track_file.stem, iTarget, targetStr))
                 input_csv = np.loadtxt(input_csv_path, delimiter=",", skiprows=1, usecols=[1,2,3])
                 #extract centroid coordinates at a single defined slice (ac_displayed_slice)
-                target_point = [np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,0]),
-                    config.ac_displayed_slice, 
-                    np.interp(config.ac_displayed_slice, input_csv[:,1], input_csv[:,2])]
-                #concatenate target_point from all subjects (target_points)
-                target_points.append(target_point)
-                subject_target_label.append(f'{targetStr}_{iSubject}')
+                #TODO:if else statement between 176-181 
+                if input_csv.size > 0: #if input_csv array is not empty
+                    for displayed_slice in config.coronal_slices_displayed_mm:
+                        target_point = [np.interp(displayed_slice, input_csv[:,1], input_csv[:,0]), #interpolate r and s coordinates for a specific displayed_slice
+                            displayed_slice, 
+                            np.interp(displayed_slice, input_csv[:,1], input_csv[:,2])]
+                        #concatenate target_point from all subjects (target_points)
+                        target_points[displayed_slice].append(target_point)
+                    subject_target_label.append(f'{targetStr}_{iSubject}')
+                else: print("csv for this target is empty")
+                
             #save out target_points array in slicer formatted csv
-            save_centroids(target_points, subject_target_label, outfile)
+            for displayed_slice in config.coronal_slices_displayed_mm:
+                save_centroids(target_points[displayed_slice], subject_target_label, outfile[displayed_slice])

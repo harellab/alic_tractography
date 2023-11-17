@@ -17,7 +17,7 @@ def split_racc(cwd):
     cwd = Path(cwd)
     subject_path = cwd  # Joining the base path with the HCP path
     indata = subject_path / 'indata'
-    divider_mni_fname = indata / 'subcallosal_cingulate_mni.nii.gz'
+    divider_mni_fname = config.splitraccplane
     
 
 
@@ -52,7 +52,7 @@ def split_racc(cwd):
     import nipype.interfaces.fsl as fsl
     applyxfm = fsl.preprocess.ApplyWarp()
     applyxfm.inputs.in_file = divider_mni_fname #subcallosal_cing_mask as input
-    applyxfm.inputs.field_file = config.mni_to_acpc_xfm
+    applyxfm.inputs.field_file = cwd/config.mni_to_acpc_xfm
     subcallosal_cingulate_acpc = pjoin(indata, 'subcallosal_cingulate_acpc.nii.gz')
     applyxfm.inputs.out_file = subcallosal_cingulate_acpc
     applyxfm.inputs.ref_file = pjoin(cwd, config.parcellationPath)

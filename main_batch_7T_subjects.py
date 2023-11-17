@@ -6,7 +6,7 @@ import sys
 import numpy as np
 from traceback import print_exc
 
-TEST_ALIC_DIR = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1'
+TEST_ALIC_DIR = '/home/udall-raid7/HCP_data/Data_Processing/7T_HCP'
 TEST_HCP_DIR = '/home/udall-raid7/HCP_data/Data/3T_HCP_visit1'
 
 def main():
@@ -23,7 +23,7 @@ def main():
         print(f'starting processing for subject {subject_id}')
         #skip subject if error out
         try:
-            alic.tasks.run_hcp_subject(
+            alic.tasks.run_7T_hcp_subject(
                 subject_id, TEST_HCP_DIR, TEST_ALIC_DIR)
         except Exception as e:
             print(f'encountered an error when running {subject_id}')

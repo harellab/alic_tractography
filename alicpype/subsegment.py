@@ -55,13 +55,16 @@ def subsegment_alic(cwd):
         for k, v in config.track_files.items()}
         
     # sanity check inputs
-    to_check = [ config.parcellationPath, config.refT1Path, config.lutPath]
+    to_check = [ config.parcellationPath, config.refT1Path]
     for side in ['left', 'right']:
         for tck in track_files[side]:
             to_check.append(tck)     
     for i in to_check:
         print(i)
         assert((cwd / i).is_file())
+    
+    #create output folder in OCD_PIPELINE
+    os.makedirs(cwd / 'output', exist_ok=True)
 
     # define functions to generate tck for target
 
@@ -126,7 +129,7 @@ def subsegment_alic(cwd):
     parcellaton=nib.load( cwd / config.rACC_mod_aparc_aseg)
 
     # load Freesurfer labels
-    lookupTable=pd.read_csv(cwd / config.lutPath,index_col='#No.')
+    lookupTable=config.freesurfer_lookup_table
 
     #perform inflate & deIsland of input parcellation
     inflated_atlas_file = cwd / config.saveFigDir / Path(Path(cwd / config.rACC_mod_aparc_aseg.stem).stem + '_inflated').with_suffix('.nii.gz')

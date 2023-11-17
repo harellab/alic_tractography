@@ -15,10 +15,16 @@ def generate_alic(cwd):
         config.diffPath, config.bvalsPath, config.bvecsPath]
     for i in to_check:
         abs_file = cwd / i
-        if i.is_file():
+        if abs_file.is_file():
             print(f'found {abs_file}')
         else:
             warn('%s doesn''t exist!' % str(abs_file))
+
+    #git clone app-track_aLIC
+    run(['git', 'clone', str(config.OCD_PIPELINE_DIR/'app-track_aLIC'), str(cwd/'app-track_aLIC')], check=True)
+
+    #git submodule update
+    run(['git', 'submodule', 'update', '--init', '--recursive'], cwd=cwd/'app-track_aLIC', check=True)
 
     # link indata to app-track_aLIC/indata
     try:
