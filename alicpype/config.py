@@ -40,6 +40,7 @@ parcellationPath = data_dir / 'aparc+aseg.nii.gz'
 parcellationFsPath = data_dir / 'mri/aparc+aseg.nii.gz'
 refT1Path = data_dir / 'T1w_acpc.nii.gz'
 diffPath = data_dir / 'diffusion_acpc.nii.gz'
+diffPath_unregistered = data_dir / 'diffusion_space-DTI.nii.gz'
 #diff_b0acpc_path = data_dir / 'eddy_wrapped_B0_image_space-acpc.nii.gz'
 #diff_unreg_path = data_dir /'eddy_wrapped_avg_image.nii.gz'
 bvalsPath = data_dir / 'bvals'
@@ -50,9 +51,14 @@ bvecsPath = data_dir / 'bvecs'
 acpc_ref_image = parcellationPath
 rACC_mod_aparc_aseg = data_dir / 'rACC_mod_aparc_aseg.nii.gz'
 
+#OCD response tract in MNI space
+ocd_response_tract_MNI = OCD_PIPELINE_DIR / 'indata' / 'Tract_Target_Li_2020_space-MNI.nii.gz'
+ocd_response_tract_acpc = data_dir / 'ocd_response_tract_acpc.nii.gz'
+
 # transform files
 acpc_to_mni_xfm = data_dir / 'acpc_dc2standard.nii.gz'
 mni_to_acpc_xfm = data_dir / 'standard2acpc_dc.nii.gz'
+DTI_to_acpc_xfm = data_dir / 'from-DTI_to-acpc_xfm.txt'
 
 rACC_split_labels = {11026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_ventral.nii.gz',
                      21026: data_dir / 'lh_rostralanteriorcingulate_ROI_acpc_dorsal.nii.gz',
@@ -78,8 +84,8 @@ mni_to_acpc_xfm_itk = data_dir / 'mni_to_acpc_xfm_itk.nii.gz'
 #acpc_to_MNI_xfm in ANTs format
 acpc_to_mni_xfm_itk = data_dir / 'acpc_to_mni_xfm_itk.nii.gz'
 
-#anterior communisure displayed slice (level of anterior commissure is 3mm, 9mm is anterior, -3mm is posterior)
-coronal_slices_displayed_mm = [9.0, 6.0, 3.0, 0, -3.0]
+#anterior communisure displayed slice (level of anterior commissure is 3mm, 9mm is anterior, 1mm is posterior)
+coronal_slices_displayed_mm = [9.0, 6.0, 3.0, 1.0]
 
 #path to project-specific directory (ex. 3T_HCP_visit1)
 project_dir = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1/'
