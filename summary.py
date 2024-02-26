@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from alicpype.centroids import make_centroids_summary
+from alicpype.streamsanalysis import run_streamline_analysis
 from pathlib import Path
 import sys 
 import numpy as np
@@ -17,6 +18,8 @@ def main():
     subject_list = np.loadtxt(subject_list_file, delimiter=',', dtype=str)
 
     make_centroids_summary(TEST_ALIC_DIR, subject_list)
+    run_streamline_analysis(TEST_ALIC_DIR, subject_list)
 
 if __name__ == '__main__':
     main()
+

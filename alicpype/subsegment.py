@@ -54,28 +54,31 @@ def tck2vtk(in_file, overwrite=True):
 def convert_xfm_fsl_to_mrtrix(input_xfm, output_xfm, ref_image):
     # generate a warpfield
     with NamedTemporaryFile(suffix = '.nii.gz') as x:
-        cmd = ['warpinit', str(config.MNI_ref_image), str(x.name),]
+        cmd = ['warpinit', '-force', str(ref_image), str(x.name)]
         run(cmd, check = True)
 
     # apply the fsl-format transform (input_xfm) to the warpfield/mrtrix non-linear transform format
-    applyxfm = fsl.preprocess.ApplyWarp()
-    applyxfm.inputs.in_file = str(x.name)
-    applyxfm.inputs.field_file = str(input_xfm) #original format xfm
-    applyxfm.inputs.out_file = str(output_xfm) 
-    applyxfm.inputs.ref_file = str(ref_image)
+        applyxfm = fsl.preprocess.ApplyWarp()
+        applyxfm.inputs.in_file = str(x.name)
+        applyxfm.inputs.field_file = str(input_xfm) #original format xfm
+        applyxfm.inputs.out_file = str(output_xfm) 
+        applyxfm.inputs.ref_file = str(ref_image)
+        applyxfm.run()
     
 # Apply mrtrix format transform to tck
 def apply_mrtrix_xfm(input_tck, output_tck, mrtrix_xfm):
     cmd = ['tcktransform', str(input_tck), str(mrtrix_xfm), str(output_tck), '-force']
     run(cmd, check = True)
+    return nib.streamlines.load(output_tck).streamlines
 
 # Generate OCD response tract ROIs based on coronal slices of interest 
-def ocd_response_tract_roi(input_roi, coronal_slice, dimension = 'y'):
-    planar_roi = wmaPyTools.roiTools.makePlananrROI(input_roi, coronal_slice, dimension)
+def ocd_response_tract_roi(input_roi, coronal_slice, dimension = 'y', threshold = 1):
+    input_roi_nifti = nib.load(input_roi)
+    planar_roi = wmaPyTools.roiTools.makePlanarROI(input_roi_nifti, coronal_slice, dimension)
     planar_data = planar_roi.get_fdata()
-    target_data = input_roi.get_fdata()
+    target_data = input_roi_nifti.get_fdata() >= threshold #binarizes mask for ocd response tract
     planar_data = planar_data * target_data
-    return nib.Nifti1Image(planar_data, input_roi.affine, input_roi.header)
+    return nib.Nifti1Image(planar_data, input_roi_nifti.affine, input_roi_nifti.header)
 
 # Calculate # of streamlines
 def calculate_streams_ocd_response(input_streams, planar_roi):
@@ -84,7 +87,7 @@ def calculate_streams_ocd_response(input_streams, planar_roi):
                         [True,], 
                         ['any',]) 
     ocd_response_streams_perecent = np.sum(ocd_response_streams) / len(input_streams) * 100
-    return (ocd_response_streams_perecent, np.sum(ocd_response_streams))
+    return (np.sum(ocd_response_streams), ocd_response_streams_perecent)
 
 
 # SUBSEGMENT TRACKS
@@ -196,8 +199,10 @@ def subsegment_alic(cwd):
     nib.save(inflatedAtlas,filename=inflated_atlas_file)
 
     # Convert fsl-format acpc to MNI xfm to mrtrix format
-    output_xfm = cwd / config.data_dir / 'acpc_to_mni_xfm_mrtrix.nii.gz'
-    acpc_to_mni_xfm_mrtrix = convert_xfm_fsl_to_mrtrix(cwd / config.acpc_to_mni_xfm, output_xfm, cwd / config.parcellationPath) #cwd when subject-specific
+    acpc_to_mni_xfm_mrtrix = cwd / config.data_dir / 'acpc_to_mni_xfm_mrtrix.nii.gz'
+    mni_to_acpc_xfm_mrtrix = cwd / config.data_dir / 'mni_to_acpc_xfm_mrtrix.nii.gz'
+    convert_xfm_fsl_to_mrtrix(cwd / config.acpc_to_mni_xfm, acpc_to_mni_xfm_mrtrix, cwd / config.MNI_ref_image) #use original xfm (acpc_to_mni_xfm) to transform images from acpc to mni
+    convert_xfm_fsl_to_mrtrix(cwd / config.mni_to_acpc_xfm, mni_to_acpc_xfm_mrtrix, cwd / config.parcellationPath) #use inverse xfm (mni_to_acpc_xfm) to transform centroids or tcks from acpc to mni
 
     # Generate OCD response tract ROI
     ROI_list = {}
@@ -205,7 +210,7 @@ def subsegment_alic(cwd):
         ROI_list[iSlice] = ocd_response_tract_roi(cwd / config.ocd_response_tract_MNI, iSlice, dimension = "y")
 
     # create an table for streamline data
-    column_labels = ['number_of_streamlines', 'percent_streamlines']
+    column_labels = ['target', 'number_of_streamlines', 'percent_streamlines']
     tables = {key: pd.DataFrame(columns=column_labels) for key in ROI_list.keys()}
 
     #Main cell, do all the hard work
@@ -248,16 +253,15 @@ def subsegment_alic(cwd):
 
                 # transform tck from acpc to MNI space
                 output_tck_mni_path = cwd / config.saveFigDir / f'{out_file.stem}_mni.tck'
-                tck_mni = apply_mrtrix_xfm(out_file.with_suffix('.tck'), output_tck_mni_path, acpc_to_mni_xfm_mrtrix)
+                tck_mni = apply_mrtrix_xfm(out_file.with_suffix('.tck'), output_tck_mni_path, mni_to_acpc_xfm_mrtrix) #we must use the inverse xfm for transfomring points and tcks
 
                 # calculate the raw number of streamlines and percent streamlines for each target that overlap with OCD response tract
                 for (iROI, value) in ROI_list.items(): #iROI is the mm slice, value is the nifti at that specific mm slice
-                    tables[iROI].loc[targetStr] = calculate_streams_ocd_response(tck_mni, value)
+                    tables[iROI].loc[targetStr] = [targetStr, *calculate_streams_ocd_response(tck_mni, value)]
     
     # save out streamline csv containging all targets for a particularly slice for a single subject 
     for (iROI, value) in tables.items():
-        outfile = cwd / config.saveFigDir / f'{iROI}_OCD_response_tract_streams'
-        value.to_csv(outfile.with_suffix('.csv'), index=False)
+        outfile = cwd / config.saveFigDir / f'{iROI}_OCD_response_tract_streams.csv'
+        value.to_csv(outfile, index=False)
 
-    #TODO: update summary.py to generate 20 csvs that contain streams data for each iROI (20 targets * 4 coronal slices of interest)
-            
+

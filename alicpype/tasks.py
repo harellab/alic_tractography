@@ -56,6 +56,7 @@ def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
     :type electrode:    string, Optional.
     :param selection:   Pieces of pipeline to run. if a dict is TODO
     """
+    hcp_root = Path(hcp_root)
 
     # copy and paste data into input folders (externalio.py)
     alicpype_root = Path(alicpype_root) #convert datatype to path

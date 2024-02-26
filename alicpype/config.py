@@ -85,7 +85,7 @@ mni_to_acpc_xfm_itk = data_dir / 'mni_to_acpc_xfm_itk.nii.gz'
 acpc_to_mni_xfm_itk = data_dir / 'acpc_to_mni_xfm_itk.nii.gz'
 
 #anterior communisure displayed slice (level of anterior commissure is 3mm, 9mm is anterior, 1mm is posterior)
-coronal_slices_displayed_mm = [9.0, 6.0, 3.0, 1.0]
+coronal_slices_displayed_mm = [9, 6, 3, 1]
 
 #path to project-specific directory (ex. 3T_HCP_visit1)
 project_dir = '/home/udall-raid7/HCP_data/Data_Processing/3T_HCP_visit1/'
