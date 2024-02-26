@@ -1,5 +1,6 @@
-# OCD_pipeline
-Imaging pipeline for supporting DBS surgeries for treatment of OCD
+# ALIC_tractography
+## Overview Description: Tractography pipeline for generating white matter streamlines for the anterior limb of the internal capsule.
+## Authors: Karianne Sretavan Wong & Henry Braun
 
 ## Installation
 
@@ -22,3 +23,26 @@ Imaging pipeline for supporting DBS surgeries for treatment of OCD
  ```
  
   4. Open the Jupyter notebook `subsegment.ipynb` and follow its instructions to run the pipeline.
+
+## Usage
+### main_batch_subjects.py
+inputs
+wrapper for run_hcp_subject
+outputs
+
+### main_batch_subjects_retest.py
+inputs
+outputs
+
+### main_batch_7T_subjects.py
+inputs
+outputs
+
+### main_run_subject.py
+inputs
+outputs
+
+##  
+
+TODO: 
+- write out descriptions within each script 
