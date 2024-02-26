@@ -165,9 +165,10 @@ def make_centroids_summary(project_dir, subject_list):
             lookupTable=config.freesurfer_lookup_table
             targetStr = lookupTable.loc[iTarget, 'LabelName:'] 
             outfile = {k: out_dir / f'{iTarget}_{targetStr}_{k}mm_summary_centroids_mni.csv' for k in config.coronal_slices_displayed_mm}
-            print(outfile) #TODO delete me
+            group_average_outfile = out_dir / f'{iTarget}_{targetStr}_average_summary_centroids_mni.csv'
             target_points = {k: [] for k in config.coronal_slices_displayed_mm}
             subject_target_label = []
+            interpolated_centroids = [] 
             for iSubject in subject_list:
                 subject_dir = project_dir / iSubject / 'OCD_pipeline'
                 #load each csv containing centroids in mni space
@@ -184,8 +185,25 @@ def make_centroids_summary(project_dir, subject_list):
                         #concatenate target_point from all subjects (target_points)
                         target_points[displayed_slice].append(target_point)
                     subject_target_label.append(f'{targetStr}_{iSubject}')
+                
+                    # Generate 20 csvs (1 per pathway) containing group average coordinates from anterior slices -13 to 19
+                    start = -13
+                    stop = 20
+                    anterior_slices = np.arange(start,stop)
+                    target_point_interp = np.transpose([np.interp(anterior_slices, input_csv[:,1], input_csv[:,0]), # generates array per subject & per target of interpolated coronal slices 
+                        anterior_slices,
+                        np.interp(anterior_slices, input_csv[:,1], input_csv[:,2])])
+                    # Generate array containing interpolated RAS coordinates for all subjects, all anterior slices
+                    interpolated_centroids.append(target_point_interp)
                 else: print("csv for this target is empty")
+            
+            # average interpolated_centroids over subject and save out csv
+            averaged_centroids = np.average(interpolated_centroids, axis = 0)
+            save_centroids(averaged_centroids, targetStr, group_average_outfile)
                 
             #save out target_points array in slicer formatted csv
             for displayed_slice in config.coronal_slices_displayed_mm:
+                print(f'saving {outfile[displayed_slice]}...')
                 save_centroids(target_points[displayed_slice], subject_target_label, outfile[displayed_slice])
+
+            #TODO: save out 20 csvs (one for each target) containing number of streamlines & % streamlines across all subjects

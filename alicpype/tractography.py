@@ -11,7 +11,7 @@ from . import config
 
 def generate_alic(cwd):
     cwd = Path(cwd)
-    to_check = [ config.parcellationPath, config.refT1Path, config.lutPath, 
+    to_check = [ config.parcellationPath, config.refT1Path, 
         config.diffPath, config.bvalsPath, config.bvecsPath]
     for i in to_check:
         abs_file = cwd / i
