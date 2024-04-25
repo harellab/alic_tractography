@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# description: concatenate centroids results from subject_list and run streamline OCD response tract overlap analysis on 3T dMRI
+
 from alicpype.centroids import make_centroids_summary
 from alicpype.streamsanalysis import run_streamline_analysis
 from pathlib import Path

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 #!/usr/bin/env conda run -p /opt/local/dbs/bin/mambaforge/envs/DBSv1p4 python
+# description: run ALIC_tractography pipeline on an individual subject with 3T dMRI
 
 import alicpype as alic
 from pathlib import Path

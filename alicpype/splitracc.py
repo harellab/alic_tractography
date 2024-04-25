@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-# description: use z-plane value to cut a ROI mask along the z-axis
-#rACC ROI = "side_" + rostralanteriorcingulate_ROI.nii.gz
+# description: use z-plane value (subcallosal cingulate) to cut the rACC mask along the z-axis to split the rACC into dorsal and ventral components as defined by the SCC
 
 import os  # Importing the os module for working with the operating system
 from os.path import join as pjoin  # Importing the `join` function from the `os.path` module
@@ -12,6 +11,7 @@ from pathlib import Path
 from subprocess import run
 from . import config
 
+# split rACC ROI
 def split_racc(cwd):
     print('running split_racc')
     cwd = Path(cwd)
@@ -19,9 +19,7 @@ def split_racc(cwd):
     indata = subject_path / 'indata'
     divider_mni_fname = config.splitraccplane
     
-
-
-    # Step 1: generate rACC ROI nifti from aparg+aseg
+    # step 1: generate rACC ROI nifti from aparg+aseg
     print('Generate rACC ROI nifti from aparg+aseg..')
     cmd = ['fslmaths', 
         str(cwd / config.parcellationPath), 
@@ -36,18 +34,7 @@ def split_racc(cwd):
         str(indata / 'rh_rostralanteriorcingulate_ROI_acpc.nii.gz')]
     run(cmd)
 
-    # # Step 2: Create binary divider mask in MNI space 
-    # #divider_mni_fname=pjoin(proj_path, 'subcallosal_cingulate_mni.nii.gz')
-    # mni = nib.load(mni_fname)
-    # mni_header=mni.header 
-    # mni_affine=mni.affine
-    # mni_data=mni.get_fdata()
-    # mask_arr=np.zeros(mni_data.shape)
-    # mask_arr[:, :, 76]=1 #extract a single line of voxels at z=76 (axial slice)
-    # mask_img=nib.Nifti1Image(mask_arr, affine=mni_affine, header=mni_header)
-    # nib.save(mask_img, divider_mni_fname)
-
-    # Step 3: Register SCC mask from MNI space to acpc space
+    # step 2: register SCC mask from MNI space to acpc space
     print('Register SCC mask from MNI space to acpc space...')
     import nipype.interfaces.fsl as fsl
     applyxfm = fsl.preprocess.ApplyWarp()
@@ -60,7 +47,7 @@ def split_racc(cwd):
     applyxfm.inputs.interp = 'nn' # "nearestneighbour" #binarize subcallosal mask
     result = applyxfm.run() 
 
-    # Step 4: Use the divided subcallosal mask to cut the rostral anterior cingulate ROI mask 
+    # Step 3: use the divided subcallosal mask to cut the rostral anterior cingulate ROI mask 
     # function to get the range of non-zero data of a 3d array 
     def shrinkarr(arr):# array as input data     
         import numpy as np
@@ -144,18 +131,14 @@ def split_racc(cwd):
     in_rois = [pjoin(indata,"rh_rostralanteriorcingulate_ROI_acpc.nii.gz"), 
         pjoin(indata,"lh_rostralanteriorcingulate_ROI_acpc.nii.gz")]
     #TODO move rACC pathnames to config.py
-    # in_roi_fname = in_rois
     in_divider_fname = subcallosal_cingulate_acpc
-    #in_divider_fname = subcallosal_cingulate_acpc
     out_rois = [pjoin(indata,"rh_rostralanteriorcingulate_ROI_acpc"), 
         pjoin(indata,"lh_rostralanteriorcingulate_ROI_acpc")]
     #TODO move rACC pathnames to config.py
-    #out_fname = out_rois
     cut_roi("", in_rois[0], "", in_divider_fname, "", out_rois[0])
     cut_roi("", in_rois[1], "", in_divider_fname, "", out_rois[1])
 
     # MODIFY APARC+ASEG WITH DIVIDED rACC ROI
-
     # load aparc+aseg in acpc
     aparc_aseg = nib.load(cwd / config.parcellationPath)
     aparc_aseg_voxel_grid = aparc_aseg.get_fdata()
