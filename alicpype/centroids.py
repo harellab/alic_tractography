@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# description: calculate (within ALIC) a centroid for each pathway using ALIC mask and rACC split into ventral and dorsal
+# description: calculate pathway-specific centroid using ALIC mask and rACC split into ventral and dorsal components
 
 # SETUP
 import os
@@ -20,19 +20,19 @@ import wmaPyTools.streamlineTools
 import wmaPyTools.visTools
 from tempfile import NamedTemporaryFile
 
-#dipy
+# dipy
 from dipy.tracking.utils import reduce_labels
 from dipy.tracking import utils
 import dipy.io.streamline
 import dipy.align
 from dipy.tracking.utils import density_map
 
-#alicpype imports
+# alicpype imports
 from . import config
 from .config import targetLabels
 
-# Convert ACPC_to_MNI xfm in fsl format to ANTS
-# Function inverts the 2nd axis (AP persumably)
+# convert ACPC_to_MNI xfm in fsl format to ANTS
+# function inverts the 2nd axis (AP persumably)
 def convertfslxfm_to_ANTS(acpc_to_mni_xfm_fsl,acpc_to_mni_xfm_ANTS, acpc_ref_image):
     if acpc_to_mni_xfm_ANTS.is_file():
         os.remove(acpc_to_mni_xfm_ANTS)
@@ -50,7 +50,7 @@ def convertfslxfm_to_ANTS(acpc_to_mni_xfm_fsl,acpc_to_mni_xfm_ANTS, acpc_ref_ima
     nifti_out = nib.Nifti1Image(voxels, nifti.affine, header=xfm_hdr_template)
     nib.save(nifti_out, acpc_to_mni_xfm_ANTS)
 
-# insert extra dimensions (to resamples ANTS transform)
+# insert extra dimensions (to resample ANTS transform)
 def add_dimensions(nifti_in, nifti_out):
     nifti = nib.load(nifti_in)
     affine = nifti.affine
@@ -63,7 +63,7 @@ def add_dimensions(nifti_in, nifti_out):
     nifti_itk = nib.Nifti1Image(voxels, affine)
     nib.save(nifti_itk, nifti_out)
 
-#Transform centroid coordinates from ACPC to MNI space
+# transform centroid coordinates from ACPC to MNI space
 def transform_centerofmass_to_mni(input_points, transform_file):
     n_points = np.shape(input_points)[0]
     if n_points > 0:
@@ -78,58 +78,79 @@ def transform_centerofmass_to_mni(input_points, transform_file):
                         '--transform', str(transform_file),
                         str(input_points_file.name)],
                     check=True)
-                output_points = np.loadtxt(output_points_file.name, delimiter=",", skiprows=1)
+                output_points = np.loadtxt(output_points_file.name, delimiter=",", skiprows=1, ndmin=2)
                 return output_points
     else: return input_points 
 
 
-
+# generate coordinates of centroid based on streamline heatmap restricted to within the ALIC
 def generate_centroid(cwd):
     cwd = Path(cwd)
     ALIC_mask_dir = {'left': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_left.nii.gz',
                     'right': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_right.nii.gz'}
+    STN_mask_dir = {'left': cwd/ config.STN_segmentation_left,
+                    'right': cwd/ config.STN_segmentation_right}
     #TODO, not a dir, change to "file"
 
     #paths to input data
     track_files = {k: [cwd / i for i in v]
         for k, v in config.track_files.items()}
-    # load Freesurfer labelsfreesurfer_lookup_table
-    lookupTable = config.freesurfer_lookup_table
-    saveFigDir = cwd / config.saveFigDir
 
-    APaxis = 1
     convertfslxfm_to_ANTS(cwd/config.acpc_to_mni_xfm, cwd/config.acpc_to_mni_xfm_itk, 
         cwd/config.MNI_ref_image)
-    for iSide in ['left', 'right']: #iterate over each hemisphere
-        ALIC_mask = nib.load(ALIC_mask_dir[iSide])#loading ALIC mask
+    for iSide in ['left','right']: #iterate over each hemisphere
+        # for normal operation, only calculate centroids for the ALIC and skip the stn
+        # for imask, imask_label in [[ALIC_mask_dir, 'withinALIC'],[STN_mask_dir, 'STN']]: #iterate over both ALIC and STN mask
+        for imask, imask_label in [[ALIC_mask_dir, 'withinALIC'],]: #iterate over ALIC mask only
+        
+            mask = nib.load(imask[iSide]) #loading mask
+            for track_file in track_files[iSide]: 
         for track_file in track_files[iSide]: 
-            for iTarget in targetLabels[iSide]: #iterate over each pathway
-                targetStr = lookupTable.loc[iTarget, 'LabelName:'] #label corresponding to each pathway
-                in_file = saveFigDir / ('%s_%04d_%s' % (track_file.stem, iTarget, targetStr)) #generate input file
-                in_nifti = nib.load(in_file.with_suffix('.nii.gz')) #load nifti of a pathway
-                in_img = in_nifti.get_fdata() #convert nifti into a voxel array
-                resample_ALIC_mask = dipy.align.resample(ALIC_mask,in_nifti) #resample ALIC mask nifti into heatmap nifti dimensions
-                in_img = in_img*resample_ALIC_mask.get_fdata() #multiply ALIC density map voxel array by resampled ALIC mask array
-                num_slices = np.shape(in_img)[APaxis]
-                out_file = saveFigDir / ('%s_%04d_%s_centerofmass_withinALIC' % (track_file.stem, iTarget, targetStr)) #output center of mass image in acpc
-                mni_out_file = saveFigDir / ('%s_%04d_%s_centerofmass_withinALIC_mni' % (track_file.stem, iTarget, targetStr)) #output centroids in mni space
-                centerofmass = np.zeros([num_slices,3]) #numerical array corresponding to x,y,z coordinates of centroid in acpc
-                for iSlice in range(num_slices): #interating over total number of coronal slides of input image
-                    img_slice = in_img[:,iSlice,:] #an individual slice
-                    tmp = ndimage.center_of_mass(img_slice, labels=None, index=None) #step that calculates COM for each slice
-                    centerofmass[iSlice,:] = [tmp[0],iSlice,tmp[1]] #adding iSlice at APaxis=1
-                centerofmass = centerofmass[~np.any(np.isnan(centerofmass),axis=1)]
-                nib.affines.apply_affine(in_nifti.affine, centerofmass, inplace=True)
+            for track_file in track_files[iSide]: 
+                for iTarget in targetLabels[iSide]: #iterate over each pathway
+                     generate_centroid_from_mask(cwd, mask, iTarget, track_file, imask_label)
+
+def generate_centroid_from_mask(cwd, in_mask, iTarget, track_file, mask_label):
+    cwd = Path(cwd)
+    APaxis = 1
+        # load Freesurfer labelsfreesurfer_lookup_table
+    lookupTable = config.freesurfer_lookup_table
+    saveFigDir = cwd / config.saveFigDir
+    targetStr = lookupTable.loc[iTarget, 'LabelName:'] #label corresponding to each pathway
+    in_file = saveFigDir / ('%s_%04d_%s' % (track_file.stem, iTarget, targetStr)) #generate input file
+    in_nifti = nib.load(in_file.with_suffix('.nii.gz')) #load nifti of a pathway
+    in_img = in_nifti.get_fdata() #convert nifti into a voxel array
+    resample_mask = dipy.align.resample(in_mask,in_nifti) #resample ALIC mask nifti into heatmap nifti dimensions
+    in_img = in_img*resample_mask.get_fdata() #multiply ALIC density map voxel array by resampled ALIC mask array
+    num_slices = np.shape(in_img)[APaxis]
+    out_file = saveFigDir / ('%s_%04d_%s_centerofmass_%s' % (track_file.stem, iTarget, targetStr, mask_label)) #output center of mass image in acpc
+    mni_out_file = saveFigDir / ('%s_%04d_%s_centerofmass_%s_mni' % (track_file.stem, iTarget, targetStr, mask_label)) #output centroids in mni space
+    centerofmass = np.zeros([num_slices,3]) #numerical array corresponding to x,y,z coordinates of centroid in acpc
+    
+    for iSlice in range(num_slices): #interating over total number of coronal slides of input image
+        img_slice = in_img[:,iSlice,:] #an individual slice
+        tmp = ndimage.center_of_mass(img_slice, labels=None, index=None) #step that calculates COM for each slice
+        centerofmass[iSlice,:] = [tmp[0],iSlice,tmp[1]] #adding iSlice at APaxis=1
+    centerofmass = centerofmass[~np.any(np.isnan(centerofmass),axis=1)]
+    nib.affines.apply_affine(in_nifti.affine, centerofmass, inplace=True)
+    if centerofmass.size > 0:
+        print(centerofmass.shape)
+        centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
                 centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
-                    cwd/config.acpc_to_mni_xfm_itk)
+        centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
+            cwd/config.acpc_to_mni_xfm_itk)
+    else: 
+        centerofmass_mni = centerofmass
+        print("csv for this target is empty")
 
-                #export centroids in acpc (slicer compatible)
-                save_centroids(centerofmass, targetStr, out_file)
+    # export centroids in ACPC (3dSlicer compatible)
+    save_centroids(centerofmass, targetStr, out_file)
 
-                #export centroids in mni (slicer compatible)
-                save_centroids(centerofmass_mni, targetStr, mni_out_file)
+    # export centroids in MNI (3dSlicer compatible)
+    save_centroids(centerofmass_mni, targetStr, mni_out_file)
     
-    
+
+# save out centroid coordinates into a csv
 def save_centroids(centerofmass, target_label, out_file):
     """ Generate and save slicer-compatible csv containing centroids """
     n_points = np.shape(centerofmass)[0]
@@ -153,9 +174,8 @@ def save_centroids(centerofmass, target_label, out_file):
     table.set_index('label')
     table.to_csv(out_file.with_suffix('.csv'), index=False)
 
-
+# generate a summary csv which includes centroids across all targets and subjects for a single defined coronal slice
 def make_centroids_summary(project_dir, subject_list):
-    """generate a summary csv which includes centroids across all targets and subjects for a single defined coronal slice"""
     project_dir = Path(project_dir)
     out_dir = project_dir / 'output'
     os.makedirs(out_dir, exist_ok=True)
@@ -175,8 +195,7 @@ def make_centroids_summary(project_dir, subject_list):
                 track_file = config.track_files[iSide][0]
                 input_csv_path = subject_dir / 'output' / ('%s_%04d_%s_centerofmass_withinALIC_mni.csv' % (track_file.stem, iTarget, targetStr))
                 input_csv = np.loadtxt(input_csv_path, delimiter=",", skiprows=1, usecols=[1,2,3])
-                #extract centroid coordinates at a single defined slice (ac_displayed_slice)
-                #TODO:if else statement between 176-181 
+                #extract centroid coordinates at a single defined slice
                 if input_csv.size > 0: #if input_csv array is not empty
                     for displayed_slice in config.coronal_slices_displayed_mm:
                         target_point = [np.interp(displayed_slice, input_csv[:,1], input_csv[:,0]), #interpolate r and s coordinates for a specific displayed_slice
@@ -186,14 +205,14 @@ def make_centroids_summary(project_dir, subject_list):
                         target_points[displayed_slice].append(target_point)
                     subject_target_label.append(f'{targetStr}_{iSubject}')
                 
-                    # Generate 20 csvs (1 per pathway) containing group average coordinates from anterior slices -13 to 19
+                    # generate 20 csvs (1 per pathway) containing group average coordinates from anterior slices -13 to 19
                     start = -13
                     stop = 20
                     anterior_slices = np.arange(start,stop)
                     target_point_interp = np.transpose([np.interp(anterior_slices, input_csv[:,1], input_csv[:,0]), # generates array per subject & per target of interpolated coronal slices 
                         anterior_slices,
                         np.interp(anterior_slices, input_csv[:,1], input_csv[:,2])])
-                    # Generate array containing interpolated RAS coordinates for all subjects, all anterior slices
+                    # generate array containing interpolated RAS coordinates for all subjects, all anterior slices
                     interpolated_centroids.append(target_point_interp)
                 else: print("csv for this target is empty")
             
@@ -201,9 +220,7 @@ def make_centroids_summary(project_dir, subject_list):
             averaged_centroids = np.average(interpolated_centroids, axis = 0)
             save_centroids(averaged_centroids, targetStr, group_average_outfile)
                 
-            #save out target_points array in slicer formatted csv
+            # save out target_points array in slicer formatted csv
             for displayed_slice in config.coronal_slices_displayed_mm:
                 print(f'saving {outfile[displayed_slice]}...')
                 save_centroids(target_points[displayed_slice], subject_target_label, outfile[displayed_slice])
-
-            #TODO: save out 20 csvs (one for each target) containing number of streamlines & % streamlines across all subjects
