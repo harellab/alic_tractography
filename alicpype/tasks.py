@@ -57,7 +57,8 @@ def run_7T_hcp_subject (subject, hcp_root, alicpype_root, selection=None):
     :hcp_root:                  path to HCP-style dataset
     :alicpype_root:             path to processed dataset from ALIC_tractography pipeline
     """
-    
+    hcp_root = Path(hcp_root)
+
     # copy and paste data into input folders (externalio.py)
     alicpype_root = Path(alicpype_root) #convert datatype to path
     subject = str(subject)
@@ -89,6 +90,7 @@ def run_ocd_subject (subject, input_data_root, alicpype_root, selection=None):
     :input_data_root:           path to OCD patient dataset
     :alicpype_root:             path to processed dataset from ALIC_tractography pipeline
     """
+    hcp_root = Path(hcp_root)
 
     # copy and paste data into input folders (externalio.py)
     alicpype_root = Path(alicpype_root) #convert datatype to path
