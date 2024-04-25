@@ -44,7 +44,7 @@ def transform_points_csv(infile, transform, outfile):
     transform_node = slicer.util.loadTransform(transform)
     
     # load input csvs in original space
-    inputarray = np.loadtxt(str(infile), delimiter=",", skiprows=1)
+    inputarray = np.loadtxt(str(infile), delimiter=",", skiprows=1, ndmin=2)
     # turn numpy array into fiducial list
     fiducial_node = slicer.mrmlScene.AddNewNodeByClass("vtkMRMLMarkupsFiducialNode") #creates an empty fiducial list
     slicer.util.updateMarkupsControlPointsFromArray(fiducial_node, inputarray, world = False) #insert input csv content into fiducial list
