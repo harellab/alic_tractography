@@ -33,8 +33,8 @@ freesurfer_lookup_table =pd.read_csv(
         index_col='#No.')
 
 # targets of interest (Freesurfer label index)
-targetLabels={'left':[1002,11026,21026,1012,1020,1028,1003,1014,1019,1027],
-                'right':[2002,12026,22026,2012,2020,2028,2003,2014,2019,2027]}
+targetLabels={'left':[1002,11026,21026,1012,1020,1028,1003,1014,1019,1027,1018],
+                'right':[2002,12026,22026,2012,2020,2028,2003,2014,2019,2027,2018]}
 
 # anterior communisure displayed slice (level of anterior commissure is 3mm, 9mm is anterior, 1mm is posterior)
 coronal_slices_displayed_mm = [9, 6, 3, 1]
