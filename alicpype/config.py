@@ -8,13 +8,12 @@ import pandas as pd
 
 ##---Set up paths within ALIC_tractography---
 ALICPYPE_DIR = Path(__file__).resolve().parent
-OCD_PIPELINE_DIR = ALICPYPE_DIR.parent
-#TODO change every instance of OCD_PIPELINE_DIR to ALIC_tractography_DIR
+ALIC_TRACTOGRAPHY_DIR = ALICPYPE_DIR.parent
 
 # setup wma_pyTools submodule installation
 # make sure that wma_pyTools is right in the working directory, or that
 # the package can otherwise be imported effectively
-sys.path.append(str(OCD_PIPELINE_DIR / 'wma_pyTools'))
+sys.path.append(str(ALIC_TRACTOGRAPHY_DIR / 'wma_pyTools'))
 
 # setup connectome workbench installation 
 # this is the path used on UMN-CMRR linux computers, on other environments install and configure connectome workbench yourself
@@ -22,14 +21,14 @@ os.environ['PATH'] = '/opt/local/dbs/bin/hcp-workbench-1.4.2/workbench/bin_rh_li
 
 # script to transform points/fiducials using Slicer
 slicer_apply_xfm_script = ALICPYPE_DIR / 'slicer_transform_points.py'
-xfm_header_template = OCD_PIPELINE_DIR / 'indata' / 'xfm_header_template.hdr'
+xfm_header_template = ALIC_TRACTOGRAPHY_DIR / 'indata' / 'xfm_header_template.hdr'
 
 # template MNI brain
-MNI_ref_image = OCD_PIPELINE_DIR / 'indata' / 'MNI152_T1_1mm_brain.nii.gz'
+MNI_ref_image = ALIC_TRACTOGRAPHY_DIR / 'indata' / 'MNI152_T1_1mm_brain.nii.gz'
 
 # Freesurfer Desikan-Killiany (DK) atlas lookup table [https://surfer.nmr.mgh.harvard.edu/fswiki/FsTutorial/AnatomicalROI/FreeSurferColorLUT]
 freesurfer_lookup_table =pd.read_csv(
-        OCD_PIPELINE_DIR / 'indata/FreesurferLookup.csv',
+        ALIC_TRACTOGRAPHY_DIR / 'indata/FreesurferLookup.csv',
         index_col='#No.')
 
 # targets of interest (Freesurfer label index)
@@ -40,10 +39,10 @@ targetLabels={'left':[1002,11026,21026,1012,1020,1028,1003,1014,1019,1027,1018],
 coronal_slices_displayed_mm = [9, 6, 3, 1]
 
 # path to subcallosal cingulate cortex (SCC) mask to divide the rostral anterior cingulate cortex (rACC)
-splitraccplane = OCD_PIPELINE_DIR / 'indata/subcallosal_cingulate_mni.nii.gz'
+splitraccplane = ALIC_TRACTOGRAPHY_DIR / 'indata/subcallosal_cingulate_mni.nii.gz'
 
 # OCD response tract in MNI space (Li et al. 2020 'A unified connectomic target for deep brain stimulation in obsessive-compulsive disorder') 
-ocd_response_tract_MNI = OCD_PIPELINE_DIR / 'indata' / 'Tract_Target_Li_2020_space-MNI.nii.gz'
+ocd_response_tract_MNI = ALIC_TRACTOGRAPHY_DIR / 'indata' / 'Tract_Target_Li_2020_space-MNI.nii.gz'
 
 ##---Set up subject-specific paths ---
 

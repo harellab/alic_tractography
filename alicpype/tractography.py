@@ -26,7 +26,7 @@ def generate_alic(cwd):
             warn('%s doesn''t exist!' % str(abs_file))
 
     # git clone app-track_aLIC
-    run(['git', 'clone', str(config.OCD_PIPELINE_DIR/'app-track_aLIC'), str(cwd/'app-track_aLIC')], check=True)
+    run(['git', 'clone', str(config.ALIC_TRACTOGRAPHY_DIR/'app-track_aLIC'), str(cwd/'app-track_aLIC')], check=True)
 
     # git submodule update
     run(['git', 'submodule', 'update', '--init', '--recursive'], cwd=cwd/'app-track_aLIC', check=True)
