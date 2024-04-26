@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# description: build a slicer scene which transforms centroids from acpc to mni space
+# description: transform centroids using a warpfield within 3D Slicer
 
 import os
 import sys
@@ -7,9 +7,14 @@ import shutil
 import argparse
 import numpy as np
 
-
-def parse_args(): #TODO
-    parser = argparse.ArgumentParser()
+def parse_args():
+    """ 
+    This function interprets terminal input and returns corresponding python variables.
+    
+    """
+    parser = argparse.ArgumentParser(
+        prog='slicer_transform_points.py',
+        description='transforms centroids using a warpfield within 3D Slicer')
     parser.add_argument(
         'infile',
         help='input CSV-format file to read. Must contain 3 columns of '
@@ -36,7 +41,16 @@ def parse_args(): #TODO
 
     return args
 
+# transform centroids from ACPC to MNI space
 def transform_points_csv(infile, transform, outfile):
+    """ 
+    This function transforms csv containing centroids to 3D coordinates
+
+    :infile:                                               input csv in original space
+    :transform:                                            transform file from original to transformed space
+    :outfile:                                              output csv in transformed space
+    """
+
     print(infile)
     print(transform)
     print(outfile)
@@ -62,7 +76,11 @@ def transform_points_csv(infile, transform, outfile):
     np.savetxt(str(outfile), outputarray, delimiter=",", header="r,a,s")
 
 def main():
-    exit_status = 0 #doesn't do anything yet. need to catch errors
+    """
+    This function parses command line arguments and passes them to transform_points_csv
+
+    """
+    exit_status = 0 # doesn't do anything yet. need to catch errors
     args = parse_args()
 
     transform_points_csv(args.infile, args.transform, args.output)

@@ -11,8 +11,8 @@ from . import config
 
 def generate_alic(cwd):
     """ 
-    This function runs app-track_aLIC to generate whole ALIC tractogram
-    :cwd:                       current working directory
+    This function runs app-track_aLIC to generate whole ALIC tractogram.
+    :cwd:       path to data directory to process
     """
     
     cwd = Path(cwd)

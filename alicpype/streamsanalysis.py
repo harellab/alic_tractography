@@ -39,11 +39,8 @@ lookupTable=config.freesurfer_lookup_table
 def run_streamline_analysis(data_dir, subject_list):
     """
     This function runs group-level calculation of streamlines overlapping with OCD response tract (Li et al. 2020)
-    number_table.tocsv:     save out the number of overlapping streamlines to a csv
-    percent_table.tocsv:    save out the percent of overlapping streamlines to a csv
-
-    :data_dir:              path to analyzed data
-    :subject_list:          path to csv containing list of subjects
+    :data_dir:         path to analyzed data
+    :subject_list:     path to csv containing list of subjects
     """
     data_dir = Path(data_dir) #defines data_dir as a path
     #iterate over subjects and slices
