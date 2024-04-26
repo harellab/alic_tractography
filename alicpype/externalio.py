@@ -11,9 +11,9 @@ import numpy as np
 def import_subject_from_list(subject_hcp_dir, cwd, to_copy): 
     """ 
     This function copies over HCP-style data from a list of subjects
-    :subject_hcp_dir:     path to subject-specific directory where data will be copied to
-    :cwd:                 current working directory
-    :to_copy:             path to subject-specific dictory where datat will be copied from
+    :subject_hcp_dir:     path to subject-specific directory where data will be copied from
+    :cwd:                 path to subject-specific directory where data will be copied to
+    :to_copy:             list of files to copy
     """
 
     subject_hcp_dir = Path(subject_hcp_dir) 
@@ -34,12 +34,10 @@ def import_subject_from_list(subject_hcp_dir, cwd, to_copy):
 # import 3T HCP data
 def import_hcp_subject(subject, hcp_root, cwd):
     """ 
-    This function imports 3T HCP-style data from a list of subjects
-    import_subject_from_list:   import data from from a list of subjects
-
-    :subject:                   subject ID
-    :hcp_root:                  path to HCP-style dataset
-    :cwd:                       current working directory
+    This function imports 3T HCP-style data from a single subject.
+    :subject:              subject ID
+    :hcp_root:             path to HCP-style dataset
+    :cwd:                  path to subject-specific directory where data will be copied to
     """
     # dict of all images copied
     to_copy = {
@@ -73,13 +71,12 @@ def import_hcp_subject(subject, hcp_root, cwd):
 # import 7T HCP data    
 def import_7T_hcp_subject(subject, hcp_root, cwd):
     """ 
-    This function imports 7T HCP-style data from a list of subjects
-    import_subject_from_list:   import data from from a list of subjects
+    This function imports 7T HCP-style data from a single subject and edits the bvals file.
     edit_bvals_b9:              edit bvalues below defined threshold to be treated as b0
 
     :subject:                   subject ID
     :hcp_root:                  path to HCP-style dataset
-    :cwd:                       current working directory
+    :cwd:                       path to subject-specific directory where data will be copied to
     """
 
     # dict of all images copied
@@ -115,10 +112,10 @@ def import_7T_hcp_subject(subject, hcp_root, cwd):
 # edit bvals file if mets condition of defined b0_threshold
 def edit_bvals_b9(bvals_raw, bvals_b9, b0_threshold):
     """ 
-    This function generates a copy of bvals file that applied a threshold to b0 volumes
+    This function generates a copy of bvals file that applies a threshold to b0 volumes.
     :bvals_raw:         original bvals file
-    :bvals_b9:          edits bvals files
-    :b0_threshold:      defined b0 threshold
+    :bvals_b9:          edited bvals files
+    :b0_threshold:      defined b0 threshold, bvals greater than 9 and less than or equal to the threshold will be reduced to 9
     """
 
     correct_b0 = 9 # corrected b0 value 
@@ -148,17 +145,17 @@ def apply_transform_to_nifti(input, ref_image, output, transform, input_dimensio
     at.run()
     return at.cmdline
 
-# import 7T OCD patient data
+# import 7T OCD subject data
 def import_ocd_subject(subject, input_data_root, cwd):
     """ 
-    This function imports 7T data from a list of OCD patients
+    This function imports 7T data from an individual OCD subject, edits the bvals file, and transform DTI to ACPC space.
     import_subject_from_list:   import data from from a list of subjects
     edit_bvals_b9:              edit bvalues below defined threshold to be treated as b0
     apply_transform_to_nifti:   transform diffusion nifti image to ACPC space
 
     :subject:                   subject ID
-    :input_data_root:           path to dataset
-    :cwd:                       current working directory
+    :input_data_root:           path to dataset where data will be copied from
+    :cwd:                       path to subject-specific directory where data will be copied to
     """
 
     # dict of all images copied
