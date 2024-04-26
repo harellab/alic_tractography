@@ -86,11 +86,10 @@ def transform_centerofmass_to_mni(input_points, transform_file):
 # generate coordinates of centroid based on streamline heatmap restricted to within the ALIC
 def generate_centroid(cwd):
     cwd = Path(cwd)
-    ALIC_mask_dir = {'left': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_left.nii.gz',
+    ALIC_mask_file = {'left': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_left.nii.gz',
                     'right': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_right.nii.gz'}
-    STN_mask_dir = {'left': cwd/ config.STN_segmentation_left,
-                    'right': cwd/ config.STN_segmentation_right}
-    #TODO, not a dir, change to "file"
+    #STN_mask_file = {'left': cwd/ config.STN_segmentation_left,
+                    #'right': cwd/ config.STN_segmentation_right}
 
     #paths to input data
     track_files = {k: [cwd / i for i in v]
@@ -100,8 +99,8 @@ def generate_centroid(cwd):
         cwd/config.MNI_ref_image)
     for iSide in ['left','right']: #iterate over each hemisphere
         # for normal operation, only calculate centroids for the ALIC and skip the stn
-        # for imask, imask_label in [[ALIC_mask_dir, 'withinALIC'],[STN_mask_dir, 'STN']]: #iterate over both ALIC and STN mask
-        for imask, imask_label in [[ALIC_mask_dir, 'withinALIC'],]: #iterate over ALIC mask only
+        # for imask, imask_label in [[ALIC_mask_file, 'withinALIC'],[STN_mask_file, 'STN']]: #iterate over both ALIC and STN mask
+        for imask, imask_label in [[ALIC_mask_file, 'withinALIC'],]: #iterate over ALIC mask only
         
             mask = nib.load(imask[iSide]) #loading mask
             for track_file in track_files[iSide]: 
