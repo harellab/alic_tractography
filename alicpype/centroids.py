@@ -34,6 +34,15 @@ from .config import targetLabels
 # convert ACPC_to_MNI xfm in fsl format to ANTS
 # function inverts the 2nd axis (AP persumably)
 def convertfslxfm_to_ANTS(acpc_to_mni_xfm_fsl,acpc_to_mni_xfm_ANTS, acpc_ref_image):
+    """
+    This function converts a transform file FSL format to ANTS.
+    :add_dimensions:            insert extra dimensions to resample ANTS transform
+
+    acpc_to_mni_xfm_fsl:        input tranform in FSL format
+    acpc_to_mni_xfm_ANTS:       output transform in ANTS format
+    acpc_ref_image:             reference image
+    
+    """
     if acpc_to_mni_xfm_ANTS.is_file():
         os.remove(acpc_to_mni_xfm_ANTS)
     cmd = ['3dresample', '-master', str(acpc_ref_image),
@@ -52,6 +61,11 @@ def convertfslxfm_to_ANTS(acpc_to_mni_xfm_fsl,acpc_to_mni_xfm_ANTS, acpc_ref_ima
 
 # insert extra dimensions (to resample ANTS transform)
 def add_dimensions(nifti_in, nifti_out):
+    """
+    This function inserts an additional dimension to resample the ANTS transform.
+    nifti_in:       input ANTS transform nifti
+    nifti_out:      output resampled ANTS transform nifti
+    """
     nifti = nib.load(nifti_in)
     affine = nifti.affine
     #print(header)
@@ -65,6 +79,13 @@ def add_dimensions(nifti_in, nifti_out):
 
 # transform centroid coordinates from ACPC to MNI space
 def transform_centerofmass_to_mni(input_points, transform_file):
+    """
+    This function transforms centroid coordinates from original to transformed space.
+    :input_points:      inputs centroid coordinates
+    :transform_file:     transform file
+
+    :return: transformed output centroid coordinates
+    """
     n_points = np.shape(input_points)[0]
     if n_points > 0:
         with NamedTemporaryFile(suffix = '.csv') as input_points_file:
@@ -85,6 +106,10 @@ def transform_centerofmass_to_mni(input_points, transform_file):
 
 # generate coordinates of centroid based on streamline heatmap restricted to within the ALIC
 def generate_centroid(cwd):
+    """
+    This function converts transform from FSL to ANTS format and passes through generate_centroid_from_mask to calculate centroids.
+    cwd:    path to subject-specific processe data directory
+    """
     cwd = Path(cwd)
     ALIC_mask_file = {'left': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_left.nii.gz',
                     'right': cwd/ 'app-track_aLIC/output/ROIS/fullCutIC_ROI11_right.nii.gz'}
@@ -102,14 +127,20 @@ def generate_centroid(cwd):
         # for imask, imask_label in [[ALIC_mask_file, 'withinALIC'],[STN_mask_file, 'STN']]: #iterate over both ALIC and STN mask
         for imask, imask_label in [[ALIC_mask_file, 'withinALIC'],]: #iterate over ALIC mask only
         
-            mask = nib.load(imask[iSide]) #loading mask
-            for track_file in track_files[iSide]: 
-        for track_file in track_files[iSide]: 
+            mask = nib.load(imask[iSide]) #loading mask 
             for track_file in track_files[iSide]: 
                 for iTarget in targetLabels[iSide]: #iterate over each pathway
                      generate_centroid_from_mask(cwd, mask, iTarget, track_file, imask_label)
 
 def generate_centroid_from_mask(cwd, in_mask, iTarget, track_file, mask_label):
+    """
+    This function generates 3D coordinates of centroids based of density map restricted to within a mask (ie. ALIC, STN).
+    cwd:        path to subject-specific process directory
+    in_mask:    input mask
+    iTarget:    PFC subregion label
+    track_file: PFC subregion track file
+    mask_label: mask label (ex. ALIC, STN)
+    """
     cwd = Path(cwd)
     APaxis = 1
         # load Freesurfer labelsfreesurfer_lookup_table
@@ -135,8 +166,6 @@ def generate_centroid_from_mask(cwd, in_mask, iTarget, track_file, mask_label):
     if centerofmass.size > 0:
         print(centerofmass.shape)
         centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
-                centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
-        centerofmass_mni = transform_centerofmass_to_mni(centerofmass, 
             cwd/config.acpc_to_mni_xfm_itk)
     else: 
         centerofmass_mni = centerofmass
@@ -151,7 +180,12 @@ def generate_centroid_from_mask(cwd, in_mask, iTarget, track_file, mask_label):
 
 # save out centroid coordinates into a csv
 def save_centroids(centerofmass, target_label, out_file):
-    """ Generate and save slicer-compatible csv containing centroids """
+    """ 
+    This function saves out slicer-compatible csv containing centroids 
+    centerofmass:   3D coordinates of centroids
+    target_label:   PFC subregion label
+    out_file:       subject-specific csv containing 3D coordinates (rostral, anterior, superior) of centroids 
+    """
     n_points = np.shape(centerofmass)[0]
     centerofmass = np.array(centerofmass, dtype=float)
     column_labels = ['label', 'r','a','s','defined','selected','visible','locked','description']
@@ -175,6 +209,11 @@ def save_centroids(centerofmass, target_label, out_file):
 
 # generate a summary csv which includes centroids across all targets and subjects for a single defined coronal slice
 def make_centroids_summary(project_dir, subject_list):
+    """
+    This function generates a summary csv which includes centroids across all targets and subjects for a single defined coronal slice.
+    project_dir:    path to general processed data directory 
+    subject_list:   list of subjects
+    """
     project_dir = Path(project_dir)
     out_dir = project_dir / 'output'
     os.makedirs(out_dir, exist_ok=True)
