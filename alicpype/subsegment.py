@@ -36,7 +36,6 @@ def tck2vtk(in_file, overwrite=True):
     This function converts a tck file to a vtk
     :in_file:   input tck file
     """
-
     in_file = Path(in_file)
     assert(in_file.is_file())
     assert(in_file.suffix.lower() == '.tck')
@@ -54,7 +53,7 @@ def tck2vtk(in_file, overwrite=True):
     run(cmd, check = True)
 
 
-# cconvert transform from FSL format to MRtrix format
+# convert transform from FSL format to MRtrix format
 def convert_xfm_fsl_to_mrtrix(input_xfm, output_xfm, ref_image):
     """ 
     This function converts a transform in FSL format to MRtrix format
@@ -62,7 +61,6 @@ def convert_xfm_fsl_to_mrtrix(input_xfm, output_xfm, ref_image):
     :output_xfm:     output transform in MRtrix format
     :ref_image:      reference image
     """
-
     # generate a warpfield
     with NamedTemporaryFile(suffix = '.nii.gz') as x:
         cmd = ['warpinit', '-force', str(ref_image), str(x.name)]
@@ -84,7 +82,6 @@ def apply_mrtrix_xfm(input_tck, output_tck, mrtrix_xfm):
     :output_tck:     output transformed tck file
     :mrtrix_xfm:     MRtrix-format transform
     """
-
     cmd = ['tcktransform', str(input_tck), str(mrtrix_xfm), str(output_tck), '-force']
     run(cmd, check = True)
     return nib.streamlines.load(output_tck).streamlines
@@ -96,7 +93,6 @@ def ocd_response_tract_roi(input_roi, coronal_slice, dimension = 'y', threshold 
     :input_roi:         input ROI image
     :coronal_slice:     single coronal slice mask image from input ROI image
     """
-
     input_roi_nifti = nib.load(input_roi)
     planar_roi = wmaPyTools.roiTools.makePlanarROI(input_roi_nifti, coronal_slice, dimension)
     planar_data = planar_roi.get_fdata()
@@ -111,7 +107,6 @@ def calculate_streams_ocd_response(input_streams, planar_roi):
     :input_streams:     input tck file containing streamlines
     :planar_roi:        single coronal slice mask image from input ROI image
     """
-
     ocd_response_streams = wmaPyTools.segmentationTools.segmentTractMultiROI(input_streams, 
                         [planar_roi,], 
                         [True,], 
@@ -119,14 +114,93 @@ def calculate_streams_ocd_response(input_streams, planar_roi):
     ocd_response_streams_perecent = np.sum(ocd_response_streams) / len(input_streams) * 100
     return (np.sum(ocd_response_streams), ocd_response_streams_perecent)
 
+# get streamlines for prefrontal cortical target
+def get_streams_matching_target(streams, atlas, target):
+    """ 
+    This function gets the streamlines for each prefrontal cortical target
+    :streams:   output streamlines from PFC target
+    :atlas:     DK atlas
+    :target:    PFC target label
+    """
+    target_mask=wmaPyTools.roiTools.multiROIrequestToMask(atlas,target)
+    # return boolean mask for stream selection
+    return wmaPyTools.segmentationTools.segmentTractMultiROI(streams, 
+                    [target_mask,], 
+                    [True,], 
+                    ['either_end',]) 
+
+# save out density map
+def save_density_map(streams, ref_img, out_file):
+    """
+    This function saves out density map for each PFC target
+    streams:    streamlines from PFC target
+    ref_img:    reference image (e.g. T1)
+    out_file:   density map nifti for PFC target
+    """
+    density=utils.density_map(streams, ref_img.affine, ref_img.shape)
+    densityNifti = nib.nifti1.Nifti1Image(density, ref_img.affine, ref_img.header)
+    nib.save(densityNifti, out_file)
+    
+# save out streamlines for each prefrontal cortical target
+def save_streams_matching_target(streams, atlas, lookupTable, target, out_file):
+    """
+    This function saves streamlines for each PFC target in tck and vtk format and pass through save_density_map.
+    streams:        input streamlines from PFC target
+    atlas:          DK atlas
+    lookupTable:    freesurfer lookup table
+    target:         PFC target label
+    out_file:       tck and vtk of streamlines from PFC target
+    """
+    strTarget = lookupTable.loc[target, 'LabelName:']
+    print('target label is: %s (%s)' % (target, strTarget))
+    print(out_file)
+    # get boolean vector of matching streams
+    targetBool = get_streams_matching_target(streams, atlas, target)
+    streams = streams[targetBool]
+        
+    #dipy quickbundles, will only run if > 0 streamlines present
+    if len(streams) > 0:
+        streams = streams[bundle(streams)]
+        
+    #save *.tck tractogram
+    wmaPyTools.streamlineTools.stubbornSaveTractogram(streams,
+        savePath=str(out_file.with_suffix('.tck')))
+    # save nifti density map
+    save_density_map(streams, atlas, out_file.with_suffix('.nii.gz'))
+
+    # convert tcks to vtks
+    tck2vtk(out_file.with_suffix('.tck'))
+    return targetBool
+
+# apply the initial culling, to remove extraneous streamlines 
+# first requires doing a DIPY quickbundling
+def bundle(streams):
+    """
+    This function applies DIPY QuickBundles for removal of extraneous streamlines
+    streams: streamlines from PFC target to be culled
+    return: boolean array showing surviving streamlines followin QuickBundles culling
+    """
+    print("DIPY quickbundle")
+    clusters=wmaPyTools.streamlineTools.quickbundlesClusters(streams, thresholds = [30,20,10], nb_pts=100)
+
+    #use those clusters to identify the streamlines to be culled
+    print("identify streamlines to remove")
+    survivingStreamsIndices, culledStreamIndicies=wmaPyTools.streamlineTools.cullViaClusters(clusters,streams,3)
+    #convert survivingStreamsIndicies into a bool vec
+    survivingStreamsBoolVec=np.zeros(len(streams),dtype=bool)
+    survivingStreamsBoolVec[survivingStreamsIndices]=True
+        
+    print('%d of %d streams survived' % (len(survivingStreamsIndices), len(survivingStreamsBoolVec)))
+        
+    return survivingStreamsBoolVec
 
 # SUBSEGMENT TRACKS
+
 def subsegment_alic(cwd):
     """ 
     This function runs anatomical-based segmentation on the whole ALIC tractogram
-    :cwd:   current working directory
+    :cwd:   path to subject-specific processed data
     """
-
     cwd = Path(cwd)
 
     # paths to input data
@@ -144,68 +218,6 @@ def subsegment_alic(cwd):
     
     # create output folder in ALIC_tractography
     os.makedirs(cwd / 'output', exist_ok=True)
-
-    # get streamlines for prefrontal cortical target
-    def get_streams_matching_target(streams, atlas, target):
-        """ 
-        This function gets the streamlines for each prefrontal cortical target
-        :streams:   current working directory
-        :atlas:     
-        :target:    
-        """
-
-        target_mask=wmaPyTools.roiTools.multiROIrequestToMask(atlas,target)
-        # return boolean mask for stream selection
-        return wmaPyTools.segmentationTools.segmentTractMultiROI(streams, 
-                        [target_mask,], 
-                        [True,], 
-                        ['either_end',]) 
-
-    # save out density map
-    def save_density_map(streams, ref_img, out_file):
-        density=utils.density_map(streams, ref_img.affine, ref_img.shape)
-        densityNifti = nib.nifti1.Nifti1Image(density, ref_img.affine, ref_img.header)
-        nib.save(densityNifti, out_file)
-    
-    # save out streamlines for each prefrontal cortical target
-    def save_streams_matching_target(streams, atlas, lookupTable, target, out_file):
-        strTarget = lookupTable.loc[target, 'LabelName:']
-        print('target label is: %s (%s)' % (target, strTarget))
-        print(out_file)
-        # get boolean vector of matching streams
-        targetBool = get_streams_matching_target(streams, atlas, target)
-        streams = streams[targetBool]
-        
-        #dipy quickbundles, will only run if > 0 streamlines present
-        if len(streams) > 0:
-            streams = streams[bundle(streams)]
-        
-        #save *.tck tractogram
-        wmaPyTools.streamlineTools.stubbornSaveTractogram(streams,
-            savePath=str(out_file.with_suffix('.tck')))
-        # save nifti density map
-        save_density_map(streams, atlas, out_file.with_suffix('.nii.gz'))
-
-        # convert tcks to vtks
-        tck2vtk(out_file.with_suffix('.tck'))
-        return targetBool
-
-    # apply the initial culling, to remove extraneous streamlines 
-    # first requires doing a DIPY quickbundling
-    def bundle(streams):
-        print("DIPY quickbundle")
-        clusters=wmaPyTools.streamlineTools.quickbundlesClusters(streams, thresholds = [30,20,10], nb_pts=100)
-
-        #use those clusters to identify the streamlines to be culled
-        print("identify streamlines to remove")
-        survivingStreamsIndices, culledStreamIndicies=wmaPyTools.streamlineTools.cullViaClusters(clusters,streams,3)
-        #convert survivingStreamsIndicies into a bool vec
-        survivingStreamsBoolVec=np.zeros(len(streams),dtype=bool)
-        survivingStreamsBoolVec[survivingStreamsIndices]=True
-        
-        print('%d of %d streams survived' % (len(survivingStreamsIndices), len(survivingStreamsBoolVec)))
-        
-        return survivingStreamsBoolVec
 
     # load atlas-based segmentation - modified rACC mask
     parcellaton=nib.load( cwd / config.rACC_mod_aparc_aseg)
@@ -239,7 +251,7 @@ def subsegment_alic(cwd):
         for track_file in track_files[iSide]:
 
             # load & orient streamlines
-            
+                
             tck_oriented_file = cwd / config.saveFigDir / Path(track_file.stem + '_oriented').with_suffix('.tck')
             if tck_oriented_file.exists():
                 print('oriented tck already exists. loading %s' % tck_oriented_file)
@@ -254,7 +266,7 @@ def subsegment_alic(cwd):
                 # save oriented + bundled streams
                 print('saving oriented tck %s' % tck_oriented_file)
                 wmaPyTools.streamlineTools.stubbornSaveTractogram(streams,savePath=str(tck_oriented_file))
-            
+                
             parent_density_file = cwd / config.saveFigDir / Path(track_file.stem).with_suffix('.nii.gz')
             print('saving density map %s' % parent_density_file)
             save_density_map(streams, inflatedAtlas, parent_density_file)
@@ -266,7 +278,7 @@ def subsegment_alic(cwd):
                 targetStr = lookupTable.loc[iTarget, 'LabelName:']
                 out_file = cwd / config.saveFigDir / ('%s_%04d_%s' % (track_file.stem, iTarget, targetStr))
                 print('Starting processing for %s' % out_file.stem)
-                
+                    
                 # subsegment the streams and save the resulting density map and tck tractogram
                 targetBool = save_streams_matching_target(streams, inflatedAtlas, lookupTable, iTarget, out_file,)
 
@@ -277,7 +289,7 @@ def subsegment_alic(cwd):
                 # calculate the number of streamlines and percent streamlines for each target that overlap with OCD response tract
                 for (iROI, value) in ROI_list.items(): #iROI is the mm slice, value is the nifti at that specific mm slice
                     tables[iROI].loc[targetStr] = [targetStr, *calculate_streams_ocd_response(tck_mni, value)]
-    
+        
     # save out streamline csv containging all targets for a particularly slice for a single subject 
     for (iROI, value) in tables.items():
         outfile = cwd / config.saveFigDir / f'{iROI}_OCD_response_tract_streams.csv'
