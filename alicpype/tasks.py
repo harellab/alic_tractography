@@ -90,7 +90,7 @@ def run_ocd_subject (subject, input_data_root, alicpype_root, selection=None):
     :input_data_root:           path to OCD patient dataset
     :alicpype_root:             path to processed dataset from ALIC_tractography pipeline
     """
-    hcp_root = Path(hcp_root)
+    input_data_root = Path(input_data_root)
 
     # copy and paste data into input folders (externalio.py)
     alicpype_root = Path(alicpype_root) #convert datatype to path
