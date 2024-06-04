@@ -1,21 +1,7 @@
 # ALIC_tractography
 
 ## Overview description
-### This repository contains a package of Python code tools that can be used to perform probabilistic tractography of the anterior limb of the internal capsule and analysis of outputs.
-
-## Authors, fundings sources, references
-### Authors
-Karianne Sretavan (sreta001@umn.edu) & Henry Braun (hbraun@umn.edu)
-
-### PI
-Noam Harel (harel002@umn.edu)
-Sarah R. Heilbronner (sarah.heilbronner@bcm.edu)
-
-### Funding sources
-Research work was supported by the University of Minnesota’s MnDRIVE (Minnesota’s Discovery, Research and Innovation Economy) initiative and NIH R01MH124687, S10OD025256, P50NS123109 and UH3NS100548. SRH was further supported by the NIH R01MH126923 and the Robert and Janice McNair Foundation.
-
-### References
-
+This repository contains a package of Python code tools that can be used to perform probabilistic tractography of the anterior limb of the internal capsule and analysis of outputs.
 
 ## Installation
 
@@ -59,13 +45,13 @@ The following files must be present as an input to the pipeline in `{TEST_HCP_DI
 * `MNINonLinear/xfms/standard2acpc_dc.nii.gz`
 
 #### outputs (per subject)
-#_OCD_response_tract_streams.csv - output values for streamline OCD response tract analysis at particular coronal slice
-combined_aLIC_left.nii.gz &  combined_aLIC_right.nii.gz: 
-combined_aLIC_left_[####]_ctx-lh-[PFCtarget].nii.gz - segmented ALIC fiber bundle (ex. 1002_ctx-lh-caudalanteriorcingulate)
-combined_aLIC_left_[####]_ctx-lh-[PFCtarget].tck - segmented ALIC fiber bundle tractrogram
-combined_aLIC_left_[####]_ctx-lh-[PFCtarget].vtk - segmented ALIC fibr bundle in vtk formate (3dSlicer compatible)
-combined_aLIC_left_[####]_ctx-lh-[PFCtarget]_centerofmass_withinALIC.csv - ALIC centroid coordinates in subject-specific space
-combined_aLIC_left_[####]_ctx-lh-[PFCtarget]_centerofmass_withinALIC_mni.csv - ALIC centroid coordinates in MNI space
+* `{coronal_slice_coordinate_mm}_OCD_response_tract_streams.csv` - output values for streamline OCD response tract analysis at particular coronal slice in MNI space (ex. `3_OCD_response_tract_streams.csv` for y = 3mm)
+* `combined_aLIC_left.nii.gz` &  `combined_aLIC_right.nii.gz`: 
+* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.nii.gz` - segmented ALIC fiber bundle (ex. `1002_ctx-lh-caudalanteriorcingulate.nii.gz`)
+* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.tck` - segmented ALIC fiber bundle tractrogram
+* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.vtk` - segmented ALIC fibr bundle in vtk formate (3dSlicer compatible)
+* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}_centerofmass_withinALIC.csv` - ALIC centroid coordinates in subject-specific space
+* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}_centerofmass_withinALIC_mni.csv` - ALIC centroid coordinates in MNI space
 
 #### functions
 run_hcp_subject is a custom-built function which includes the following sub-functions:
@@ -111,3 +97,15 @@ Inputs and outputs are identical to summary.py except using 7T data.
 TODO: 
 - specify packaged versions that were run
 -
+
+## Authors, fundings sources, references
+### Authors
+Karianne Sretavan (sreta001@umn.edu) & Henry Braun (hbraun@umn.edu)
+
+### PI
+Noam Harel (harel002@umn.edu)
+Sarah R. Heilbronner (sarah.heilbronner@bcm.edu)
+
+### Funding sources
+Research work was supported by the University of Minnesota’s MnDRIVE (Minnesota’s Discovery, Research and Innovation Economy) initiative and NIH R01MH124687, S10OD025256, P50NS123109 and UH3NS100548. SRH was further supported by the NIH R01MH126923 and the Robert and Janice McNair Foundation.
+
