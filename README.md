@@ -9,36 +9,37 @@ Karianne Sretavan (sreta001@umn.edu) & Henry Braun (hbraun@umn.edu)
 
 ### PI
 Noam Harel (harel002@umn.edu)
+Sarah R. Heilbronner (sarah.heilbronner@bcm.edu)
 
 ### Funding sources
-Karianne Sretavan's work is supported by the following sources: the University of Minnesota Informatics Institute MnDRIVE Graduate Assistantship and NIH R01 MH124687, S10 OD025256, and P50 NS123109.
+Research work was supported by the University of Minnesota’s MnDRIVE (Minnesota’s Discovery, Research and Innovation Economy) initiative and NIH R01MH124687, S10OD025256, P50NS123109 and UH3NS100548. SRH was further supported by the NIH R01MH126923 and the Robert and Janice McNair Foundation.
 
 ### References
 
 
 ## Installation
 
-1. Install connectome workbench [https://www.humanconnectome.org/software/connectome-workbench]
+1. Install dependencies:
+* connectome workbench [https://www.humanconnectome.org/software/connectome-workbench]
+* apptainer [https://apptainer.org/]
 
-1. Clone this repository.
+2. Clone this repository.
 
-2. update all submodules:
+3. update all submodules:
  ```
  git submodule update --init --recursive # Execute from within the folder you just cloned
  ```
-3. Build or activate the "subsegment" conda environment:
+4. Build or activate the "subsegment" conda environment:
 
-  *. On CMRR linux computers, the environment is already built and ready to be activated, assuming you have conda configured:
+  * On CMRR linux computers, the environment is already built and ready to be activated, assuming you have conda configured:
  ```
  conda activate /opt/local/dbs/bin/miniconda3/envs/subsegment
  ```
-  *. If on a different machine, you can build the environment from the environment.yml file:
+  * If on a different machine, you can build the environment from the environment.yml file:
  ```
  conda env create -n subsegment -f environment.yml
  conda activate subsegment
  ```
- 
-  4. Open the Jupyter notebook `subsegment.ipynb` and follow its instructions to run the pipeline.
 
 ## Usage
 
