@@ -10,6 +10,11 @@ from subprocess import run
 from . import config
 
 def generate_alic(cwd):
+    """ 
+    This function runs app-track_aLIC to generate whole ALIC tractogram.
+    :cwd:       path to data directory to process
+    """
+    
     cwd = Path(cwd)
     to_check = [ config.parcellationPath, config.refT1Path, 
         config.diffPath, config.bvalsPath, config.bvecsPath]
@@ -20,10 +25,10 @@ def generate_alic(cwd):
         else:
             warn('%s doesn''t exist!' % str(abs_file))
 
-    #git clone app-track_aLIC
-    run(['git', 'clone', str(config.OCD_PIPELINE_DIR/'app-track_aLIC'), str(cwd/'app-track_aLIC')], check=True)
+    # git clone app-track_aLIC
+    run(['git', 'clone', str(config.ALIC_TRACTOGRAPHY_DIR/'app-track_aLIC'), str(cwd/'app-track_aLIC')], check=True)
 
-    #git submodule update
+    # git submodule update
     run(['git', 'submodule', 'update', '--init', '--recursive'], cwd=cwd/'app-track_aLIC', check=True)
 
     # link indata to app-track_aLIC/indata

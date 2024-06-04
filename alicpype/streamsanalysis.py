@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# description: concatenate all subject streamline OCD response tract data into 8 csvs (number of streamlines, perecent streamlines iterated over 4 coronal slices)
+# description: concatenate all subject streamline OCD response tract data into 8 csvs (number of streamlines & perecent streamlines iterated over 4 coronal slices)
 
 
 # SETUP
@@ -21,31 +21,30 @@ import wmaPyTools.streamlineTools
 import wmaPyTools.visTools
 from tempfile import NamedTemporaryFile
 
-#dipy
+# dipy
 from dipy.tracking.utils import reduce_labels
 from dipy.tracking import utils
 import dipy.io.streamline
 import dipy.align
 from dipy.tracking.utils import density_map
 
-#alicpype imports
+# alicpype imports
 from . import config
 from .config import targetLabels
 
 # load Freesurfer labels
 lookupTable=config.freesurfer_lookup_table
 
+# run group-level streamline OCD response tract overlap calculation
 def run_streamline_analysis(data_dir, subject_list):
+    """
+    This function runs group-level calculation of streamlines overlapping with OCD response tract (Li et al. 2020)
+    :data_dir:         path to analyzed data
+    :subject_list:     path to csv containing list of subjects
+    """
     data_dir = Path(data_dir) #defines data_dir as a path
     #iterate over subjects and slices
     for iSlice in config.coronal_slices_displayed_mm: #iterate over slice
-        #columns = ['subject', ]
-        #for iSide in ['left', 'right']:
-            #for iTarget in targetLabels[iSide]:
-                #targetStr = lookupTable.loc[iTarget, 'LabelName:']
-                #columns.append(str(iTarget)) #append each target label to column headers
-        #table = pd.DataFrame(columns=columns, ) #generate an empty data frame
-        #table.set_index('subject', inplace=True) #set subject column for indexing
         number_data = {lookupTable.loc[i, 'LabelName:']:{} for i in [*targetLabels['left'], *targetLabels['right']]}
         percent_data = number_data.copy()
         
@@ -56,10 +55,10 @@ def run_streamline_analysis(data_dir, subject_list):
             for iRow in inputcsv: 
                 number_data[iRow[0]][iSubject] = iRow[1]
                 percent_data[iRow[0]][iSubject] = iRow[2]
-        number_table = pd.DataFrame(number_data) #generate table containing number of streamline data
-        percent_table = pd.DataFrame(percent_data) #generate table containing percent streamline data
+        number_table = pd.DataFrame(number_data) #generate table containing number of streamlines
+        percent_table = pd.DataFrame(percent_data) #generate table containing percent streamlines
 
-        #save out summary csvs (2 for each slice)
+        #save out summary csv (2 for each slice)
         number_table.to_csv(data_dir / 'output' / f'number_streamlines_summary_{iSlice}.csv', index=True)
         percent_table.to_csv(data_dir / 'output' / f'percent_streamlines_summary_{iSlice}.csv', index=True)
 
