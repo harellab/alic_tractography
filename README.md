@@ -25,7 +25,7 @@ Research work was supported by the University of Minnesota’s MnDRIVE (Minnesot
 
 2. Clone this repository.
 
-3. update all submodules:
+3. Update all submodules:
  ```
  git submodule update --init --recursive # Execute from within the folder you just cloned
  ```
@@ -43,19 +43,20 @@ Research work was supported by the University of Minnesota’s MnDRIVE (Minnesot
 
 ## Usage
 
-### Imaging data
-T1w_acpc_dc_restore.nii.gz
-bvals
-bvecs
-diffusion_data.nii.gz
-acpc_to_mni_xfm.nii.gz 
-mni_to_acpc_xfm.nii.gz
+`main_batch_subjects.py` is used to generate whole and segemented ALIC tractograms, run and anatomically plotting/data visualization (density heatmaps, centroids, streamline OCD response tract analysis) for a batch of subjects with 3T dMRI stored in HCP dataset format.
 
-### main_batch_subjects.py to generate whole and segemented ALIC tractograms, run and anatomically plotting/data visualization (density heatmaps, centroids, streamline OCD response tract analysis) for a batch of subjects with 3T dMRI
+### Imaging data inputs
+`main_batch_subjects.py` accepts a single input argument, consisting of a path to a CSV file containing the subject IDs to run, with one subject ID per line. In addition to command-line arguments, the following variables are currently hardcoded in main_batch_subjects.py:
+* `TEST_ALIC_DIR`: directory where match_batch_subjects.py will be run and analyzed data will be stored
+* `TEST_HCP_DIR`: directory where imaging data is stored
 
-#### inputs (per subject)
-TEST_ALIC_DIR = [directory to where match_batch_subjects.py will be run analyzed data will be housed]
-TEST_HCP_DIR = [directory to where imaging data is housed]
+The following files must be present as an input to the pipeline in `{TEST_HCP_DIR}/{SUBJECT_ID}`:
+* `T1w/T1w_acpc_dc_restore.nii.gz`
+* `T1w/Diffusion/bvals`
+* `T1w/Diffusion/bvecs`
+* `T1w/Diffusion/data.nii.gz`
+* `MNINonLinear/xfms/acpc_dc2standard.nii.gz`
+* `MNINonLinear/xfms/standard2acpc_dc.nii.gz`
 
 #### outputs (per subject)
 #_OCD_response_tract_streams.csv - output values for streamline OCD response tract analysis at particular coronal slice
