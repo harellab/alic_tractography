@@ -44,8 +44,8 @@ The following files must be present as an input to the pipeline in `{TEST_HCP_DI
 * `MNINonLinear/xfms/acpc_dc2standard.nii.gz`
 * `MNINonLinear/xfms/standard2acpc_dc.nii.gz`
 
-#### outputs (per subject)
-* `{coronal_slice_coordinate_mm}_OCD_response_tract_streams.csv` - output values for streamline OCD response tract analysis at particular coronal slice in MNI space (ex. `3_OCD_response_tract_streams.csv` for y = 3mm)
+### outputs (per subject)
+* `{coronal_slice_coordinate_mm}_OCD_response_tract_streams.csv` - output values for streamline OCD response tract analysis (percentage of streamlines overlapping with OCD response tract [Li et al. 2020]) at a single coronal slice in MNI space (ex. `3_OCD_response_tract_streams.csv` for y = 3mm)
 * `combined_aLIC_left.nii.gz` &  `combined_aLIC_right.nii.gz`: 
 * `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.nii.gz` - segmented ALIC fiber bundle (ex. `1002_ctx-lh-caudalanteriorcingulate.nii.gz`)
 * `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.tck` - segmented ALIC fiber bundle tractrogram
@@ -53,13 +53,13 @@ The following files must be present as an input to the pipeline in `{TEST_HCP_DI
 * `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}_centerofmass_withinALIC.csv` - ALIC centroid coordinates in subject-specific space
 * `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}_centerofmass_withinALIC_mni.csv` - ALIC centroid coordinates in MNI space
 
-#### functions
+### functions
 run_hcp_subject is a custom-built function which includes the following sub-functions:
 generate_alic()
 subsegment_alic()
 generate_centroid()
 
-#### terminal command
+### terminal command
 [directory to main_batch_subjects.py] [directory to subject list (subjects_list_test.csv)]
 
 ### main_batch_subjects_retest.py to generate whole and segemented ALIC tractograms, run and anatomically plotting/data visualization for a batch of subjects with 3T retest dMRI
@@ -96,7 +96,10 @@ Inputs and outputs are identical to summary.py except using 7T data.
 
 TODO: 
 - specify packaged versions that were run
--
+- fill in references
+
+## References
+Li N, Baldermann JC, Kibleur A, Treu S, Akram H, Elias GJB, *et al.* (2020): A unified connectomic target for deep brain stimulation in obsessive-compulsive disorder [no. 1]. *Nat Commun* 11: 3364.
 
 ## Authors, fundings sources, references
 ### Authors
