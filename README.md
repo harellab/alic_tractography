@@ -32,14 +32,14 @@ This repository contains a package of Python code tools that can be used to perf
 There are two main top-level scripts: `main_batch_subjects.py` and `summary.py`.
 
 ### main_batch_subjects.py
-`main_batch_subjects.py` is used to generate whole and segemented ALIC tractograms, run and anatomically plotting/data visualization (density heatmaps, centroids, streamline OCD response tract analysis) for a batch of subjects with 3T dMRI stored in HCP dataset format.
+`main_batch_subjects.py` is used to generate whole and parcellated ALIC tractograms, run and anatomically plotting/data visualization (density heatmaps, centroids, streamline OCD response tract analysis) for a batch of subjects with 3T dMRI stored in HCP dataset format.
 
 #### Imaging data inputs
 `main_batch_subjects.py` accepts a single input argument, consisting of a path to a CSV file containing the subject IDs to run, with one subject ID per line. In addition to command-line arguments, the following variables are currently hardcoded in main_batch_subjects.py:
 * `TEST_ALIC_DIR`: directory where match_batch_subjects.py will be run and analyzed data will be stored
 * `TEST_HCP_DIR`: directory where imaging data is stored
 
-The following files must be present as an input to the pipeline in `{TEST_HCP_DIR}/{SUBJECT_ID}`:
+The following files must be present as an input to the pipeline in `{TEST_HCP_DIR}/{SUBJECT_ID}/`:
 * `T1w/T1w_acpc_dc_restore.nii.gz`
 * `T1w/Diffusion/bvals`
 * `T1w/Diffusion/bvecs`
@@ -50,14 +50,14 @@ The following files must be present as an input to the pipeline in `{TEST_HCP_DI
 #### outputs (per subject)
 * `{coronal_slice_coordinate_mm}_OCD_response_tract_streams.csv` - output values for streamline OCD response tract analysis (percentage of streamlines overlapping with OCD response tract [Li et al. 2020]) at a single coronal slice in MNI space (ex. `3_OCD_response_tract_streams.csv` for y = 3mm)
 * `combined_aLIC_left.nii.gz` &  `combined_aLIC_right.nii.gz`: 
-* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.nii.gz` - segmented ALIC fiber bundle (ex. `1002_ctx-lh-caudalanteriorcingulate.nii.gz`)
-* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.tck` - segmented ALIC fiber bundle tractrogram
-* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.vtk` - segmented ALIC fibr bundle in vtk formate (3dSlicer compatible)
+* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.nii.gz` - parcellated ALIC fiber bundle (ex. `1002_ctx-lh-caudalanteriorcingulate.nii.gz`)
+* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.tck` - parcellated ALIC fiber bundle tractrogram
+* `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}.vtk` - parcellated ALIC fibr bundle in vtk formate (3dSlicer compatible)
 * `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}_centerofmass_withinALIC.csv` - ALIC centroid coordinates in subject-specific space
 * `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}_centerofmass_withinALIC_mni.csv` - ALIC centroid coordinates in MNI space
 
 ### summary.py
-`summary.py` is used to run group-level analyses (concatenate centroids results and streamline OCD response tract analysis) and must be run after `main_batch_subjects.py`.
+`summary.py` is used to run group-level analyses (concatenate centroids results and streamline OCD response tract analysis for a batch of subjects) and must be run after `main_batch_subjects.py`.
 
 #### inputs (group-level)
 
