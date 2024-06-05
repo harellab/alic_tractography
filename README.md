@@ -32,7 +32,11 @@ This repository contains a package of Python code tools that can be used to perf
 There are two main top-level scripts: `main_batch_subjects.py` and `summary.py`.
 
 ### main_batch_subjects.py
-`main_batch_subjects.py` is used to generate whole and parcellated ALIC tractograms, run and anatomically plotting/data visualization (density heatmaps, centroids, streamline OCD response tract analysis) for a batch of subjects with 3T dMRI stored in HCP dataset format.
+`main_batch_subjects.py` is used to generate whole and parcellated ALIC tractograms, run and anatomically plotting/data visualization (density heatmaps, centroids, streamline OCD response tract analysis) for a batch of subjects with 3T dMRI stored in HCP dataset format. Syntax is
+```
+./main_batch_subjects.py /path/to/subjects_list.csv # replace with path to your CSV file
+```
+This software is not installable as a python package (yet) so you must either run with the current directory set to the repository root or add to `PYTHONPATH` so that alicpype and app-track_aLIC are importable.
 
 #### Imaging data inputs
 `main_batch_subjects.py` accepts a single input argument, consisting of a path to a CSV file containing the subject IDs to run, with one subject ID per line. In addition to command-line arguments, the following variables are currently hardcoded in main_batch_subjects.py:
@@ -57,7 +61,10 @@ The following files must be present as an input to the pipeline in `{TEST_HCP_DI
 * `combined_aLIC_left_{PFC_target_id}_ctx-lh-{PFC_target_name}_centerofmass_withinALIC_mni.csv` - ALIC centroid coordinates in MNI space
 
 ### summary.py
-`summary.py` is used to run group-level analyses (concatenate centroids results and streamline OCD response tract analysis for a batch of subjects) and must be run after `main_batch_subjects.py`.
+`summary.py` is used to run group-level analyses (concatenate centroids results and streamline OCD response tract analysis for a batch of subjects) and must be run after `main_batch_subjects.py`. Syntax is
+```
+./summary.py subject_list_test.csv
+```
 
 #### inputs (group-level)
 
@@ -68,45 +75,6 @@ The following files must be present as an input to the pipeline in `{TEST_HCP_DI
 * `{PFC_target_id}_ctx-lh-{PFC_target_name}_{coronal_slice_coordinate_mm}mm_summary_centroids_mni.csv` - target-specific centroid coordinates at specific coronal slice across all subjects (ex. `1002_ctx-lh-caudalanteriorcingulate_3mm_summary_centroids_mni.csv`)
 * `{PFC_target_id}_ctx-lh-{PFC_target_name}_average_summary_centroids_mni.csv` - target-specific group-averaged centroid coordinates across all coronal slices along the anterior-posterior axis of the ALIC (ex. `1002_ctx-lh-caudalanteriorcingulate_average_summary_centroids_mni.csv`)
 
-### functions
-run_hcp_subject is a custom-built function which includes the following sub-functions:
-generate_alic()
-subsegment_alic()
-generate_centroid()
-
-### terminal command
-[directory to main_batch_subjects.py] [directory to subject list (subjects_list_test.csv)]
-
-### main_batch_subjects_retest.py to generate whole and segemented ALIC tractograms, run and anatomically plotting/data visualization for a batch of subjects with 3T retest dMRI
-Inputs and outputs are identical to main_batch_subjects.py except using retest data.
-#### terminal command: [directory to main_batch_subjects_retest.py] [directory to subject list (subjects_list_retest.csv)]
-
-### main_batch_7T_subjects.py to generate whole and segemented ALIC tractograms, run and anatomically plotting/data visualization for a batch of subjects with 7T dMRI
-Inputs and outputs are identical to main_batch_subjects.py except using 7T data.
-terminal command: [directory to main_batch_7T_subjects.py] [directory to subject list (subjects_list_7T.csv)]
-
-### main_run_subject.py to generate whole and segemented ALIC tractograms, run and anatomically plotting/data visualization for an individual subject
-Inputs and outputs are identical to main_batch_subjects.py.
-#### terminal command: [directory to main_run_subject.py] [directory to subject-specific folder (subject_002)]
-
-
-
-#
-
-#### functions
-make_centroids_summary()
-run_streamline_analysis()
-
-#### terminal command
-[directory to summary.py] [directory to subject list (subject_list_test.csv)]
-
-### summary_7T.py to run group-level analyses (concatenate centroids results and streamline OCD response tract analysis) on 7T dMRI
-Inputs and outputs are identical to summary.py except using 7T data.
-
-TODO: 
-- specify packaged versions that were run
-- fill in references
-
 ## References
 Li N, Baldermann JC, Kibleur A, Treu S, Akram H, Elias GJB, *et al.* (2020): A unified connectomic target for deep brain stimulation in obsessive-compulsive disorder [no. 1]. *Nat Commun* 11: 3364.
 
@@ -116,6 +84,7 @@ Karianne Sretavan (sreta001@umn.edu) & Henry Braun (hbraun@umn.edu)
 
 ### PI
 Noam Harel (harel002@umn.edu)
+
 Sarah R. Heilbronner (sarah.heilbronner@bcm.edu)
 
 ### Funding sources
