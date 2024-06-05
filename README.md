@@ -8,7 +8,7 @@ This repository contains a package of Python code tools that can be used to perf
 1. Install dependencies:
 * Connectome Workbench [https://www.humanconnectome.org/software/connectome-workbench]
 * Apptainer [https://apptainer.org/]
-* Anaconda [https://anaconda.org/]
+* Anaconda or miniconda [https://anaconda.org/]
 
 2. Clone this repository.
 
