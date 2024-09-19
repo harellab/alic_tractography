@@ -23,6 +23,9 @@ os.environ['PATH'] = '/opt/local/dbs/bin/hcp-workbench-1.4.2/workbench/bin_rh_li
 slicer_apply_xfm_script = ALICPYPE_DIR / 'slicer_transform_points.py'
 xfm_header_template = ALIC_TRACTOGRAPHY_DIR / 'indata' / 'xfm_header_template.hdr'
 
+# script to transform fiber bundles using Slicer
+slicer_apply_xfm2bundle_script = ALICPYPE_DIR / 'slicer_transform_bundle.py'
+
 # template MNI brain
 MNI_ref_image = ALIC_TRACTOGRAPHY_DIR / 'indata' / 'MNI152_T1_1mm_brain.nii.gz'
 

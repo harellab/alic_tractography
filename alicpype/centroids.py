@@ -104,6 +104,37 @@ def transform_centerofmass_to_mni(input_points, transform_file):
     else: return input_points 
 
 
+# transform fiber bundles from ACPC to DTI space
+def transform_bundle_to_dti(input_bundle, transform, output_bundle):
+    """
+    This function transforms fiber bundles from native space to transformed space.
+    :input_bundle:      input fiber bundle vtk
+    :transform:         transform file
+
+    :return: transformed output fiber bundle
+    """
+
+    p = run(
+        ['Slicer',
+            '--no-main-window',
+            '--python-script', str(config.slicer_apply_xfm2bundle_script),
+            '--output', str(output_bundle),
+            '--transform', str(transform),
+            str(input_bundle)],
+        check=True)
+
+# transform fiber bundle in vtk format from ACPC to DTI space (transform_bundle_to_dti)
+def transform_bundles(cwd):
+    """
+    This function transforms fiber bundles from ACPC to DTI space
+    cwd:    path to subject-specific processe data directory
+    """
+    for iSide in ['left','right']:
+        for iTarget in config.targetLabels[iSide]:
+            target = f'combined_aLIC_{iSide}_{iTarget}_{config.freesurfer_lookup_table.loc[iTarget, "LabelName:"]}.vtk'
+            output_bundle = f'combined_aLIC_{iSide}_{iTarget}_{config.freesurfer_lookup_table.loc[iTarget, "LabelName:"]}_space-dti.vtk'
+            transform_bundle_to_dti(cwd/config.saveFigDir/target, cwd/config.DTI_to_acpc_xfm, cwd/config.saveFigDir/output_bundle)
+
 # generate coordinates of centroid based on streamline heatmap restricted to within the ALIC
 def generate_centroid(cwd):
     """

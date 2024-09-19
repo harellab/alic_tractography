@@ -9,6 +9,7 @@ from .tractography import generate_alic
 from .splitracc import split_racc
 from .subsegment import subsegment_alic
 from .centroids import generate_centroid
+from .centroids import transform_bundles
 
 def run_hcp_subject(subject, hcp_root, alicpype_root, selection=None ):
     """ 
@@ -108,4 +109,5 @@ def run_ocd_subject (subject, input_data_root, alicpype_root, selection=None):
     subsegment_alic(cwd)
 
     # calculate centroids of each subsegmented ALIC heatmap (centroids.py)
-    generate_centroid(cwd)
+    # transform fiber bundle within slicer
+    transform_bundles(cwd)
