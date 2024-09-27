@@ -67,6 +67,9 @@ def transform_fiber_bundle(infile, transform, outfile):
     # harden the transform
     fiber_node.HardenTransform()
 
+    # uncompress node (convert from binary to ascii format)
+    fiber_node.GetStorageNode().SetUseCompression(0)
+
     # save out fiber bundles in transformed space
     slicer.util.saveNode(fiber_node, outfile)
 
